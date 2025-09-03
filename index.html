@@ -14,9 +14,9 @@
     <link rel="manifest" href="manifest.json">
 
     <!-- Icons for Home Screen -->
-    <link rel="apple-touch-icon" href="foosball_16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="foosball_16.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="foosball_16.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/180/148cb4/foosball.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://img.icons8.com/ios-filled/32/148cb4/foosball.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://img.icons8.com/ios-filled/16/148cb4/foosball.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -613,7 +613,6 @@
 
             // Modal Storico Individuale
             const historyModal = document.getElementById('historyModal');
-            const historyModalContent = document.getElementById('historyModalContent');
             const playerProfileHeader = document.getElementById('playerProfileHeader');
             const closeHistoryModalBtn = document.getElementById('closeHistoryModal');
             const historyStartDateInput = document.getElementById('historyStartDate');
@@ -1656,16 +1655,23 @@
                 }
 
                 // 3. Altre Azioni
-                wizardActions.innerHTML += `
-                    <button id="wizardRegister" class="wizard-action-card w-full">
-                        <p class="font-bold text-lg">✍️ Registra una Partita Manualmente</p>
-                        <p class="text-sm text-gray-600">Scegli tu i giocatori e i ruoli per la prossima sfida.</p>
-                    </button>
-                    <button id="wizardLab" class="wizard-action-card w-full">
-                        <p class="font-bold text-lg">🔬 Vai al Laboratorio</p>
-                        <p class="text-sm text-gray-600">Analizza le classifiche, le sinergie e gli storici.</p>
-                    </button>
+                const wizardRegister = document.createElement('button');
+                wizardRegister.id = 'wizardRegister';
+                wizardRegister.className = 'wizard-action-card w-full';
+                wizardRegister.innerHTML = `
+                    <p class="font-bold text-lg">✍️ Registra una Partita Manualmente</p>
+                    <p class="text-sm text-gray-600">Scegli tu i giocatori e i ruoli per la prossima sfida.</p>
                 `;
+                wizardActions.appendChild(wizardRegister);
+
+                const wizardLab = document.createElement('button');
+                wizardLab.id = 'wizardLab';
+                wizardLab.className = 'wizard-action-card w-full';
+                wizardLab.innerHTML = `
+                    <p class="font-bold text-lg">🔬 Vai al Laboratorio</p>
+                    <p class="text-sm text-gray-600">Analizza le classifiche, le sinergie e gli storici.</p>
+                `;
+                wizardActions.appendChild(wizardLab);
 
                 document.getElementById('wizardRegister').addEventListener('click', closePreMatchAssistant);
                 document.getElementById('wizardLab').addEventListener('click', closePreMatchAssistant);
