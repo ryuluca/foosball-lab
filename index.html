@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foosball Lab</title>
+
+    <!-- PWA / Add to Home Screen Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Foosball Lab">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f8f9fa">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icons for Home Screen -->
+    <link rel="apple-touch-icon" href="foosball_16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="foosball_16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="foosball_16.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-neutral: #f8f9fa;
+            --text-neutral: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --card-bg: #ffffff;
+            --primary: #148cb4;
+            --primary-dark: #106f8f;
+            --accent: #FFD22E;
+            --accent-dark: #f0c01a;
+            --danger: #dc3545;
+            --danger-dark: #b02a37;
+            --success: #28a745;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-neutral);
+            color: var(--text-neutral);
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border: 1px solid transparent;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--text-neutral);
+            font-weight: 700;
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-secondary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: var(--primary-dark);
+        }
+        .btn:disabled {
+            background-color: #e9ecef;
+            color: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+         .btn-danger:hover {
+            background-color: var(--danger-dark);
+        }
+        select, input[type="text"], input[type="date"] {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            color: var(--text-neutral);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+        }
+        select:focus, input[type="text"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 210, 46, 0.25);
+        }
+        .team-a-color { color: var(--primary); }
+        .team-b-color { color: #6c757d; } /* Grigio per team B */
+        .accordion-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .sort-btn svg {
+            transition: transform 0.3s ease;
+        }
+        .modal-tab {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .modal-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .role-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+        .rank-1 { background-color: rgba(255, 210, 46, 0.2); border-left: 4px solid var(--accent); }
+        .rank-2 { background-color: rgba(192, 192, 192, 0.2); border-left: 4px solid #adb5bd; }
+        .rank-3 { background-color: rgba(205, 127, 50, 0.15); border-left: 4px solid #CD7F32; }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800">Foosball Lab</h1>
+            <p class="mt-2 text-base sm:text-lg text-gray-500">Analisi, Strategie e Gloria nel Calcio Balilla</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Colonna Controlli -->
+            <div class="lg:col-span-1 flex flex-col gap-8">
+                <!-- Aggiungi Giocatore -->
+                <div class="card">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Aggiungi Giocatore</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="playerNameInput" placeholder="Nome del nuovo giocatore" class="flex-grow">
+                        <button id="addPlayerBtn" class="btn btn-primary">Aggiungi</button>
+                    </div>
+                </div>
+
+                <!-- Registra Partita -->
+                <div class="card">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Registra Partita</h2>
+                    <div class="space-y-6">
+                        <!-- Data Partita -->
+                        <div>
+                             <h3 class="font-bold text-gray-600 mb-2 text-lg">Data</h3>
+                             <input type="date" id="matchDate">
+                        </div>
+
+                        <!-- Squadra A -->
+                        <div>
+                            <div class="flex justify-between items-baseline">
+                                <h3 class="font-bold team-a-color mb-2 text-lg">Squadra A</h3>
+                                <span class="text-sm font-bold team-a-color" id="teamAEloDisplay">ELO: -</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="role-label">⚔️ Attacco</label>
+                                    <select id="teamAPlayerAttack"></select>
+                                </div>
+                                <div>
+                                    <label class="role-label">🛡️ Difesa</label>
+                                    <select id="teamAPlayerDefense"></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Squadra B -->
+                        <div>
+                             <div class="flex justify-between items-baseline">
+                                <h3 class="font-bold team-b-color mb-2 text-lg">Squadra B</h3>
+                                <span class="text-sm font-bold team-b-color" id="teamBEloDisplay">ELO: -</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="role-label">⚔️ Attacco</label>
+                                    <select id="teamBPlayerAttack"></select>
+                                </div>
+                                <div>
+                                    <label class="role-label">🛡️ Difesa</label>
+                                    <select id="teamBPlayerDefense"></select>
+                                </div>
+                            </div>
+                            <button id="teamAssistantBtn" class="btn btn-secondary w-full mt-2 text-sm">Assistente Squadre...</button>
+                        </div>
+
+                        <!-- Vincitore -->
+                        <div>
+                            <h3 class="font-bold text-gray-600 mb-2 text-lg">Vincitore</h3>
+                            <div class="flex items-center space-x-2 rounded-lg bg-gray-100 p-1">
+                                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-[--primary] has-[:checked]:text-white has-[:checked]:shadow-md">
+                                    <input type="radio" name="winner" value="A" class="sr-only" checked>
+                                    <span>Squadra A</span>
+                                </label>
+                                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-gray-600 has-[:checked]:text-white has-[:checked]:shadow-md">
+                                    <input type="radio" name="winner" value="B" class="sr-only">
+                                    <span>Squadra B</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Bottone Registra -->
+                        <button id="recordMatchBtn" class="btn btn-primary w-full text-lg">Registra Risultato...</button>
+                    </div>
+                </div>
+                 <!-- Area Messaggi -->
+                <div id="messageArea" class="hidden p-4 rounded-lg text-center font-semibold text-white"></div>
+                 <!-- Gestione Dati -->
+                <div class="card">
+                    <button class="accordion-header flex justify-between items-center w-full">
+                        <h2 class="text-2xl font-semibold text-gray-800">Gestione Dati</h2>
+                        <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content hidden pt-4">
+                        <div class="space-y-4">
+                            <button id="linkFileBtn" class="btn w-full" style="background-color: var(--primary); color: white;">Collega/Crea dati.json</button>
+                             <p class="text-xs text-center text-gray-500">Salva i dati in un file locale per la massima persistenza e condivisione.</p>
+                             <div class="border-t pt-4 mt-4">
+                                 <h3 class="font-semibold text-gray-700 mb-2 text-lg">Backup / Ripristino</h3>
+                                <button id="exportBtn" class="btn w-full" style="background-color: var(--text-muted); color: white;">Esporta Backup (JSON)</button>
+                                <button id="importBtn" class="btn w-full mt-2" style="background-color: var(--text-muted); color: white;">Importa Backup (JSON)</button>
+                                <input type="file" id="importFileInput" accept=".json" class="hidden">
+                             </div>
+                            <div class="border-t pt-4 mt-4">
+                                 <h3 class="font-semibold text-gray-700 mb-2 text-lg">Eliminazione Multipla</h3>
+                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                     <input type="date" id="bulkDeleteStartDate" title="Data di inizio per eliminazione">
+                                     <input type="date" id="bulkDeleteEndDate" title="Data di fine per eliminazione">
+                                 </div>
+                                 <button id="bulkDeleteBtn" class="btn btn-danger w-full mt-2">Elimina Partite nel Periodo...</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonna Classifica e Confronto -->
+            <div class="lg:col-span-2 flex flex-col gap-8">
+                <!-- Classifica -->
+                <div class="card" id="leaderboard-card">
+                    <div class="flex justify-between items-start mb-4 flex-wrap gap-2">
+                        <div>
+                             <h2 class="text-2xl font-semibold text-gray-800">Classifica Giocatori</h2>
+                             <p class="text-sm text-gray-500">Clicca su un giocatore per l'analisi</p>
+                        </div>
+                    </div>
+                    <!-- Filtro Classifica -->
+                    <div class="flex items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
+                         <div class="flex items-center gap-2">
+                            <input type="radio" id="rankOverall" name="rankType" value="overall" class="text-[--primary] focus:ring-[--primary]" checked><label for="rankOverall" class="text-sm font-medium">Generale</label>
+                         </div>
+                         <div class="flex items-center gap-2">
+                            <input type="radio" id="rankPeriod" name="rankType" value="period" class="text-[--primary] focus:ring-[--primary]"><label for="rankPeriod" class="text-sm font-medium">Periodo</label>
+                         </div>
+                         <div id="leaderboardDateFilters" class="flex-grow flex items-center gap-2 hidden">
+                            <input type="date" id="leaderboardStartDate" class="text-sm p-1">
+                            <input type="date" id="leaderboardEndDate" class="text-sm p-1">
+                            <button id="leaderboardFilterBtn" class="btn btn-primary p-2 text-sm">Filtra</button>
+                         </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg font-bold text-gray-600 text-sm mb-2">
+                        <div class="flex items-center gap-4">
+                            <span class="w-8 text-center">#</span>
+                            <button id="nameSortBtn" class="sort-btn flex items-center gap-1 cursor-pointer">
+                                <span>Nome</span>
+                                <svg id="nameSortIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                        </div>
+                        <button id="eloSortBtn" class="sort-btn flex items-center gap-1 cursor-pointer">
+                            <span>ELO</span>
+                            <svg id="eloSortIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                    </div>
+                    <div id="leaderboard" class="space-y-2"></div>
+                </div>
+                 <!-- Centro Analisi Strategica -->
+                <div class="card">
+                     <button class="accordion-header flex justify-between items-center w-full">
+                        <h2 class="text-2xl font-semibold text-gray-800">Centro Analisi Strategica</h2>
+                        <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                     <div class="accordion-content hidden pt-4">
+                         <div class="border-b border-gray-200 mb-4">
+                            <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                                <button data-tab="general" class="comparison-tab modal-tab active">📈 Confronto Generale</button>
+                                <button data-tab="roles" class="comparison-tab modal-tab">🛡️ Analisi per Ruolo</button>
+                                <button data-tab="synergy" class="comparison-tab modal-tab">🤝 Analisi Sinergie</button>
+                            </nav>
+                        </div>
+                        <div class="space-y-4">
+                            <!-- Periodo -->
+                            <div>
+                                <h3 class="font-bold text-gray-600 mb-2">Seleziona Periodo</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <input type="date" id="comparisonStartDate">
+                                    <input type="date" id="comparisonEndDate">
+                                </div>
+                            </div>
+                            <!-- Controlli Dinamici -->
+                            <div id="synergyControls" class="hidden space-y-2">
+                                <h3 class="font-bold text-gray-600">Analizza con...</h3>
+                                <select id="synergyPivotPlayer"></select>
+                            </div>
+                            <div id="rolesControls" class="hidden space-y-2">
+                                <h3 class="font-bold text-gray-600">Analizza nel ruolo di...</h3>
+                                <select id="rolesSelect">
+                                    <option value="attack">⚔️ Attacco</option>
+                                    <option value="defense">🛡️ Difesa</option>
+                                </select>
+                            </div>
+
+                             <!-- Lista Giocatori -->
+                             <div>
+                                 <h3 id="playerListTitle" class="font-bold text-gray-600 mb-2">Seleziona Giocatori</h3>
+                                 <div id="comparisonPlayerList" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 border rounded-lg border-gray-200"></div>
+                             </div>
+                             <button id="compareBtn" class="btn btn-primary w-full">Analizza Dati</button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Storico Partite -->
+        <div class="card mt-8 lg:col-span-3">
+             <button class="accordion-header flex justify-between items-center w-full">
+                <h2 class="text-2xl font-semibold text-gray-800">Storico Partite</h2>
+                <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="accordion-content hidden pt-4">
+                <div class="flex justify-between items-center mb-4 gap-2 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <input type="date" id="matchHistoryStartDate" class="text-sm p-1 w-auto">
+                        <input type="date" id="matchHistoryEndDate" class="text-sm p-1 w-auto">
+                        <button id="matchHistoryFilterBtn" class="btn btn-primary p-2 text-sm">Filtra</button>
+                        <button id="matchHistoryResetBtn" class="btn p-2 text-sm" style="background-color: var(--text-muted); color: white;">Reset</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="matchSortSelect" class="text-sm font-medium text-gray-700">Ordina per:</label>
+                        <select id="matchSortSelect" class="w-auto text-sm rounded-md border-gray-300 shadow-sm" style="padding-right: 2rem;">
+                            <option value="date_desc">Data (Più Recente)</option>
+                            <option value="date_asc">Data (Meno Recente)</option>
+                            <option value="elo_desc">ELO Medio (Alto-Basso)</option>
+                            <option value="elo_asc">ELO Medio (Basso-Alto)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="matchHistory" class="space-y-3 max-h-[400px] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+
+        <!-- Sezione Spiegazione Calcolo ELO -->
+        <div class="card mt-8 lg:col-span-3">
+            <button class="accordion-header flex justify-between items-center w-full">
+                 <h2 class="text-2xl font-semibold text-gray-800">Come viene calcolato il punteggio ELO?</h2>
+                 <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+             <div class="accordion-content hidden pt-4">
+                 <div class="space-y-4 text-gray-600">
+                    <p>Il sistema di valutazione ELO è nato per gli scacchi, ma è perfetto per qualsiasi gioco a due concorrenti. Ecco una spiegazione semplificata di come funziona per le vostre partite 2v2:</p>
+                    <ol class="list-decimal list-inside space-y-3 pl-2">
+                         <li><strong class="text-gray-800">Punto di partenza uguale per tutti:</strong> Ogni nuovo giocatore inizia con un punteggio di <strong>1500 ELO</strong>.</li>
+                        <li><strong class="text-gray-800">Forza della squadra:</strong> Calcoliamo la "forza" di ogni squadra facendo la <strong>media dei punteggi ELO</strong> dei due giocatori (attacco e difesa).</li>
+                        <li><strong class="text-gray-800">Calcolo delle probabilità:</strong> In base alla differenza di ELO, il sistema calcola il risultato atteso.</li>
+                        <li><strong class="text-gray-800">Confronto con la realtà:</strong> Se la squadra sfavorita vince, guadagna <strong>molti punti ELO</strong> e i favoriti ne perdono altrettanti.</li>
+                        <li><strong class="text-gray-800">Aggiornamento individuale:</strong> La variazione di punteggio viene applicata a <strong>entrambi i giocatori</strong> della squadra.</li>
+                    </ol>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per Storico ELO Individuale -->
+    <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-4xl transform transition-all" id="historyModalContent">
+            <div class="flex justify-between items-center mb-2">
+                <h2 id="historyModalTitle" class="text-2xl font-semibold text-gray-800"></h2>
+                <div class="flex items-center gap-2">
+                    <button id="closeHistoryModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
+                </div>
+            </div>
+             <!-- Filtro Data Globale -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200 items-end">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data Inizio</label>
+                    <input type="date" id="historyStartDate" class="mt-1">
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700">Data Fine</label>
+                    <input type="date" id="historyEndDate" class="mt-1">
+                </div>
+                <button id="historyFilterBtn" class="btn btn-primary h-fit">Applica Filtro</button>
+            </div>
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                    <button id="tabStats" class="modal-tab">📊 Statistiche & Sinergie</button>
+                    <button id="tabChart" class="modal-tab active">📈 Andamento Grafico</button>
+                    <button id="tabHistory" class="modal-tab">📜 Storico Partite</button>
+                </nav>
+            </div>
+            
+            <!-- Tab Content -->
+            <div id="tabStatsContent" class="hidden">
+                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                    <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsMatchesPlayed">-</p><p class="text-sm text-gray-600">Partite Giocate</p></div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-green-600" id="statsWinRate">-</p><p class="text-sm text-gray-600">Vittorie</p></div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsEloChange">-</p><p class="text-sm text-gray-600">Variazione ELO</p></div>
+                    <div class="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-300"><p class="text-2xl font-bold text-yellow-900 truncate" id="statsBestRole">-</p><p class="text-sm text-yellow-800">Ruolo Migliore</p></div>
+                 </div>
+                 <h3 class="text-xl font-semibold text-gray-800 mb-3">Analisi Sinergie Compagni</h3>
+                 <div id="bestTeammatesContainer" class="space-y-3 max-h-[40vh] overflow-y-auto"></div>
+            </div>
+            <div id="tabChartContent">
+                <div class="bg-gray-50 p-4 rounded-lg"><canvas id="eloHistoryChart"></canvas></div>
+            </div>
+            <div id="tabHistoryContent" class="hidden">
+                 <div class="flex justify-end items-center mb-4 gap-2">
+                    <label for="playerMatchSortSelect" class="text-sm font-medium text-gray-700">Ordina per:</label>
+                    <select id="playerMatchSortSelect" class="w-auto text-sm rounded-md border-gray-300 shadow-sm"><option value="date_desc">Data (Più Recente)</option><option value="date_asc">Data (Meno Recente)</option></select>
+                </div>
+                <div id="playerMatchHistoryContainer" class="space-y-2 max-h-[50vh] overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per Analisi Strategica -->
+    <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-4xl transform transition-all">
+             <div class="flex justify-between items-center mb-4">
+                <h2 id="comparisonModalTitle" class="text-2xl font-semibold text-gray-800"></h2>
+                 <div class="flex items-center gap-2">
+                    <button id="closeComparisonModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
+                </div>
+            </div>
+            <div id="comparisonModalContent" class="bg-gray-50 p-4 rounded-lg max-h-[70vh] overflow-y-auto"></div>
+        </div>
+    </div>
+    
+    <!-- Modal Assistente Squadre -->
+    <div id="teamAssistantModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-2xl transform transition-all">
+             <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Assistente Squadre</h2>
+                <button id="closeTeamAssistantModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
+            </div>
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                    <button data-tab="opponents" class="assistant-tab modal-tab active">Trova Avversari</button>
+                    <button data-tab="partners" class="assistant-tab modal-tab">Trova Compagno</button>
+                </nav>
+            </div>
+
+            <!-- Tab Trova Avversari -->
+            <div id="assistantOpponentsContent">
+                 <div id="opponentPairsList" class="space-y-4 max-h-[60vh] overflow-y-auto p-1"></div>
+            </div>
+            <!-- Tab Trova Compagno -->
+            <div id="assistantPartnersContent" class="hidden space-y-4">
+                <div>
+                    <h3 class="font-bold text-gray-600 mb-2">Seleziona un giocatore e il suo ruolo</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <select id="partnerFinderPlayer"></select>
+                        <select id="partnerFinderRole">
+                            <option value="attack">⚔️ Attacco</option>
+                            <option value="defense">🛡️ Difesa</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         <input type="date" id="partnerFinderStartDate">
+                         <input type="date" id="partnerFinderEndDate">
+                    </div>
+                </div>
+                <div id="partnerList" class="space-y-2 max-h-[40vh] overflow-y-auto p-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal di Conferma Registrazione Partita -->
+    <div id="confirmRecordModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-md transform transition-all text-center">
+             <h2 class="text-2xl font-bold text-gray-800 mb-4">Conferma Partita</h2>
+             <div id="recordSummary" class="text-left space-y-2 mb-6"></div>
+             <div class="flex justify-center gap-4">
+                 <button id="cancelRecordBtn" class="btn" style="background-color: var(--text-muted); color: white;">Annulla</button>
+                 <button id="confirmRecordBtn" class="btn btn-primary">Conferma Partita</button>
+             </div>
+        </div>
+    </div>
+
+    <!-- Modal di Conferma Eliminazione Singola -->
+    <div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-md transform transition-all text-center">
+             <h2 class="text-2xl font-bold text-gray-800 mb-4">Conferma Eliminazione</h2>
+             <p class="text-gray-600 mb-6">Sei sicuro di voler eliminare questa partita? L'azione è irreversibile.</p>
+             <div class="flex justify-center gap-4">
+                 <button id="cancelDeleteBtn" class="btn" style="background-color: var(--text-muted); color: white;">Annulla</button>
+                 <button id="confirmDeleteBtn" class="btn btn-danger">Conferma Eliminazione</button>
+             </div>
+        </div>
+    </div>
+
+    <!-- Modal di Conferma Eliminazione Multipla -->
+    <div id="confirmBulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-2xl transform transition-all">
+             <h2 class="text-2xl font-bold text-gray-800 mb-2">Conferma Eliminazione Multipla</h2>
+             <p id="bulkDeleteSummaryText" class="text-gray-600 mb-4"></p>
+             <div id="bulkDeleteMatchList" class="space-y-2 max-h-60 overflow-y-auto p-2 border rounded-lg bg-gray-50 mb-6"></div>
+             <div class="flex justify-end gap-4">
+                 <button id="cancelBulkDeleteBtn" class="btn" style="background-color: var(--text-muted); color: white;">Annulla</button>
+                 <button id="confirmBulkDeleteBtn" class="btn btn-danger">Conferma Eliminazione</button>
+             </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Elementi del DOM ---
+            const playerNameInput = document.getElementById('playerNameInput');
+            const addPlayerBtn = document.getElementById('addPlayerBtn');
+            const recordMatchBtn = document.getElementById('recordMatchBtn');
+            const leaderboard = document.getElementById('leaderboard');
+            const messageArea = document.getElementById('messageArea');
+            const matchDateInput = document.getElementById('matchDate');
+            const matchHistoryContainer = document.getElementById('matchHistory');
+            const exportBtn = document.getElementById('exportBtn');
+            const importBtn = document.getElementById('importBtn');
+            const importFileInput = document.getElementById('importFileInput');
+            const linkFileBtn = document.getElementById('linkFileBtn');
+            
+            const teamASelects = { attack: document.getElementById('teamAPlayerAttack'), defense: document.getElementById('teamAPlayerDefense') };
+            const teamBSelects = { attack: document.getElementById('teamBPlayerAttack'), defense: document.getElementById('teamBPlayerDefense') };
+            const allSelects = [...Object.values(teamASelects), ...Object.values(teamBSelects)];
+
+            const teamAEloDisplay = document.getElementById('teamAEloDisplay');
+            const teamBEloDisplay = document.getElementById('teamBEloDisplay');
+            const teamAssistantBtn = document.getElementById('teamAssistantBtn');
+
+            // Leaderboard Sorting
+            const nameSortBtn = document.getElementById('nameSortBtn');
+            const nameSortIcon = document.getElementById('nameSortIcon');
+            const eloSortBtn = document.getElementById('eloSortBtn');
+            const eloSortIcon = document.getElementById('eloSortIcon');
+            const leaderboardDateFilters = document.getElementById('leaderboardDateFilters');
+            const leaderboardStartDate = document.getElementById('leaderboardStartDate');
+            const leaderboardEndDate = document.getElementById('leaderboardEndDate');
+            const leaderboardFilterBtn = document.getElementById('leaderboardFilterBtn');
+            const rankTypeRadios = document.querySelectorAll('input[name="rankType"]');
+            
+            // Match History
+            const matchSortSelect = document.getElementById('matchSortSelect');
+            const matchHistoryStartDate = document.getElementById('matchHistoryStartDate');
+            const matchHistoryEndDate = document.getElementById('matchHistoryEndDate');
+            const matchHistoryFilterBtn = document.getElementById('matchHistoryFilterBtn');
+            const matchHistoryResetBtn = document.getElementById('matchHistoryResetBtn');
+
+
+            // Modal Storico Individuale
+            const historyModal = document.getElementById('historyModal');
+            const historyModalTitle = document.getElementById('historyModalTitle');
+            const closeHistoryModalBtn = document.getElementById('closeHistoryModal');
+            const historyStartDateInput = document.getElementById('historyStartDate');
+            const historyEndDateInput = document.getElementById('historyEndDate');
+            const historyFilterBtn = document.getElementById('historyFilterBtn');
+            const playerAnalysisTabs = {
+                stats: document.getElementById('tabStats'),
+                chart: document.getElementById('tabChart'),
+                history: document.getElementById('tabHistory'),
+            };
+            const playerAnalysisContents = {
+                stats: document.getElementById('tabStatsContent'),
+                chart: document.getElementById('tabChartContent'),
+                history: document.getElementById('tabHistoryContent'),
+            };
+            const playerMatchHistoryContainer = document.getElementById('playerMatchHistoryContainer');
+            const playerMatchSortSelect = document.getElementById('playerMatchSortSelect');
+            const statsMatchesPlayed = document.getElementById('statsMatchesPlayed');
+            const statsWinRate = document.getElementById('statsWinRate');
+            const statsEloChange = document.getElementById('statsEloChange');
+            const statsBestRole = document.getElementById('statsBestRole');
+            const bestTeammatesContainer = document.getElementById('bestTeammatesContainer');
+            
+            // Sezione Analisi Strategica
+            const comparisonTabs = document.querySelectorAll('.comparison-tab');
+            const comparisonPlayerList = document.getElementById('comparisonPlayerList');
+            const playerListTitle = document.getElementById('playerListTitle');
+            const synergyControls = document.getElementById('synergyControls');
+            const synergyPivotPlayer = document.getElementById('synergyPivotPlayer');
+            const rolesControls = document.getElementById('rolesControls');
+            const rolesSelect = document.getElementById('rolesSelect');
+            const comparisonStartDateInput = document.getElementById('comparisonStartDate');
+            const comparisonEndDateInput = document.getElementById('comparisonEndDate');
+            const compareBtn = document.getElementById('compareBtn');
+            
+            // Modal Analisi
+            const comparisonModal = document.getElementById('comparisonModal');
+            const comparisonModalTitle = document.getElementById('comparisonModalTitle');
+            const comparisonModalContent = document.getElementById('comparisonModalContent');
+            const closeComparisonModalBtn = document.getElementById('closeComparisonModal');
+
+            // Modal Assistente Squadre
+            const teamAssistantModal = document.getElementById('teamAssistantModal');
+            const closeTeamAssistantModal = document.getElementById('closeTeamAssistantModal');
+            const assistantTabs = document.querySelectorAll('.assistant-tab');
+            const assistantOpponentsContent = document.getElementById('assistantOpponentsContent');
+            const assistantPartnersContent = document.getElementById('assistantPartnersContent');
+            const opponentPairsList = document.getElementById('opponentPairsList');
+            const partnerFinderPlayer = document.getElementById('partnerFinderPlayer');
+            const partnerFinderRole = document.getElementById('partnerFinderRole');
+            const partnerFinderStartDate = document.getElementById('partnerFinderStartDate');
+            const partnerFinderEndDate = document.getElementById('partnerFinderEndDate');
+            const partnerList = document.getElementById('partnerList');
+
+            // Altri Modals
+            const confirmRecordModal = document.getElementById('confirmRecordModal');
+            const recordSummary = document.getElementById('recordSummary');
+            const cancelRecordBtn = document.getElementById('cancelRecordBtn');
+            const confirmRecordBtn = document.getElementById('confirmRecordBtn');
+            const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const bulkDeleteStartDateInput = document.getElementById('bulkDeleteStartDate');
+            const bulkDeleteEndDateInput = document.getElementById('bulkDeleteEndDate');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const confirmBulkDeleteModal = document.getElementById('confirmBulkDeleteModal');
+            const bulkDeleteSummaryText = document.getElementById('bulkDeleteSummaryText');
+            const bulkDeleteMatchList = document.getElementById('bulkDeleteMatchList');
+            const cancelBulkDeleteBtn = document.getElementById('cancelBulkDeleteBtn');
+            const confirmBulkDeleteBtn = document.getElementById('confirmBulkDeleteBtn');
+            
+            // --- Stato dell'applicazione ---
+            let players = [];
+            let matches = [];
+            let singleHistoryChart = null;
+            let comparisonChart = null;
+            let currentlyViewingPlayerId = null;
+            let matchIdToDelete = null;
+            let matchesToDeleteIds = [];
+            let leaderboardSort = { by: 'elo', order: 'desc' };
+            let matchHistorySort = 'date_desc';
+            let comparisonMode = 'general';
+            let fileHandle = null;
+            const K_FACTOR = 32;
+            const INITIAL_ELO = 1500;
+            const CHART_COLORS = ['#148cb4', '#dc3545', '#28a745', '#6f42c1', '#fd7e14', '#20c997', '#ffc107', '#6610f2'];
+
+            // --- Helper Functions ---
+            const getPlayer = (id) => players.find(p => p.id === id);
+            const getPlayers = (idArray) => idArray.map(id => getPlayer(id));
+            const calculateMedian = (arr) => {
+                if (!arr.length) return 0;
+                const sorted = arr.slice().sort((a,b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+            };
+
+            // --- Funzioni Principali ---
+
+            function showMessage(text, isError = false) {
+                messageArea.textContent = text;
+                messageArea.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+                messageArea.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+                setTimeout(() => messageArea.classList.add('hidden'), 3000);
+            }
+            
+            function addPlayer() {
+                const name = playerNameInput.value.trim();
+                if (!name) return showMessage("Il nome del giocatore non può essere vuoto.", true);
+                if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) return showMessage("Questo giocatore esiste già.", true);
+                
+                players.push({
+                    id: Date.now(),
+                    name: name,
+                    elo: INITIAL_ELO,
+                    history: [{ date: new Date(0).toISOString().split('T')[0], elo: INITIAL_ELO }]
+                });
+                playerNameInput.value = '';
+                saveAndRender();
+            }
+            
+            function deletePlayer(id) {
+                players = players.filter(p => p.id !== id);
+                recalculateAllElos();
+                saveAndRender();
+            }
+
+            function preRecordMatch() {
+                if (!matchDateInput.value) return showMessage("Devi inserire una data valida.", true);
+                const playerIds = allSelects.map(s => s.value);
+                if (playerIds.some(id => id === '')) return showMessage("Seleziona un giocatore per ogni ruolo.", true);
+                if (new Set(playerIds).size !== 4) return showMessage("Ogni giocatore può essere selezionato una sola volta.", true);
+
+                const teamAPlayers = { attack: getPlayer(parseInt(teamASelects.attack.value)), defense: getPlayer(parseInt(teamASelects.defense.value)) };
+                const teamBPlayers = { attack: getPlayer(parseInt(teamBSelects.attack.value)), defense: getPlayer(parseInt(teamBSelects.defense.value)) };
+                const winner = document.querySelector('input[name="winner"]:checked').value;
+                
+                recordSummary.innerHTML = `
+                    <p><strong>Data:</strong> ${new Date(matchDateInput.value).toLocaleDateString('it-IT')}</p>
+                    <p><strong>Squadra A:</strong> ⚔️ ${teamAPlayers.attack.name} & 🛡️ ${teamAPlayers.defense.name}</p>
+                    <p><strong>Squadra B:</strong> ⚔️ ${teamBPlayers.attack.name} & 🛡️ ${teamBPlayers.defense.name}</p>
+                    <p><strong>Vincitore:</strong> <span class="font-bold ${winner === 'A' ? 'team-a-color' : 'team-b-color'}">Squadra ${winner}</span></p>
+                `;
+                confirmRecordModal.classList.remove('hidden');
+            }
+
+            function recordMatch() {
+                matches.push({
+                    id: Date.now(),
+                    date: matchDateInput.value,
+                    teamA: { attack: parseInt(teamASelects.attack.value), defense: parseInt(teamASelects.defense.value) },
+                    teamB: { attack: parseInt(teamBSelects.attack.value), defense: parseInt(teamBSelects.defense.value) },
+                    winner: document.querySelector('input[name="winner"]:checked').value,
+                });
+
+                recalculateAllElos();
+                showMessage("Partita registrata con successo!");
+                saveAndRender();
+            }
+
+            function openConfirmationModal(matchId) {
+                matchIdToDelete = matchId;
+                confirmDeleteModal.classList.remove('hidden');
+            }
+
+            function deleteMatch(matchId) {
+                matches = matches.filter(m => m.id !== matchId);
+            }
+
+            function recalculateAllElos() {
+                matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+                players.forEach(player => {
+                    player.history = [player.history[0]];
+                    player.elo = INITIAL_ELO;
+                });
+
+                matches.forEach(match => {
+                    const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
+                    const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
+                    
+                    if (!teamAPlayers.attack || !teamAPlayers.defense || !teamBPlayers.attack || !teamBPlayers.defense) return;
+
+                    match.teamA_elos = { attack: teamAPlayers.attack.elo, defense: teamAPlayers.defense.elo };
+                    match.teamB_elos = { attack: teamBPlayers.attack.elo, defense: teamBPlayers.defense.elo };
+
+                    const teamAElo = (teamAPlayers.attack.elo + teamAPlayers.defense.elo) / 2;
+                    const teamBElo = (teamBPlayers.attack.elo + teamBPlayers.defense.elo) / 2;
+                    const expectedScoreA = 1 / (1 + Math.pow(10, (teamBElo - teamAElo) / 400));
+                    const actualScoreA = (match.winner === 'A') ? 1 : 0;
+                    const eloChange = K_FACTOR * (actualScoreA - expectedScoreA);
+                    
+                    match.eloChange = eloChange;
+
+                    Object.values(teamAPlayers).forEach(p => {
+                        const newElo = Math.round(p.elo + eloChange);
+                        p.elo = newElo;
+                        p.history.push({ date: match.date, elo: newElo });
+                    });
+                    Object.values(teamBPlayers).forEach(p => {
+                        const newElo = Math.round(p.elo - eloChange);
+                        p.elo = newElo;
+                        p.history.push({ date: match.date, elo: newElo });
+                    });
+                });
+            }
+            
+            // --- Funzioni di Rendering e UI ---
+            function render() {
+                renderPlayers();
+                renderMatches();
+                renderComparisonSelectors();
+            }
+
+            function renderPlayers(playerData = null) {
+                const sourcePlayers = playerData || players;
+                
+                sourcePlayers.sort((a, b) => {
+                    if (leaderboardSort.by === 'elo') return leaderboardSort.order === 'desc' ? b.elo - a.elo : a.elo - b.elo;
+                    return leaderboardSort.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+                });
+
+                leaderboard.innerHTML = sourcePlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Nessun giocatore.</p>`;
+                sourcePlayers.forEach((player, index) => {
+                    let rankClass = '';
+                    if(leaderboardSort.by === 'elo' && leaderboardSort.order === 'desc') {
+                        if (index === 0) rankClass = 'rank-1';
+                        else if (index === 1) rankClass = 'rank-2';
+                        else if (index === 2) rankClass = 'rank-3';
+                    }
+                    const playerRow = document.createElement('div');
+                    playerRow.className = `flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer ${rankClass}`;
+                    playerRow.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-lg w-8 text-center">${index + 1}</span>
+                            <span class="text-lg font-medium text-gray-800">${player.name}</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-lg" style="color: var(--primary)">${Math.round(player.elo)}</span>
+                            <button class="btn-danger text-xs px-2 py-1 rounded" data-id="${player.id}">X</button>
+                        </div>`;
+                    playerRow.querySelector('button').addEventListener('click', e => { e.stopPropagation(); deletePlayer(player.id); });
+                    playerRow.addEventListener('click', () => openHistoryModal(player.id));
+                    leaderboard.appendChild(playerRow);
+                });
+                
+                if(!playerData) { // Only update selectors if rendering the main list
+                    allSelects.forEach(select => {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">Seleziona...</option>';
+                        players.sort((a, b) => a.name.localeCompare(b.name)).forEach(player => {
+                            select.innerHTML += `<option value="${player.id}">${player.name}</option>`;
+                        });
+                        select.value = currentValue;
+                    });
+                }
+            }
+
+            function handleLeaderboardFilter() {
+                 const startDate = leaderboardStartDate.value;
+                 const endDate = leaderboardEndDate.value;
+                 if(!startDate || !endDate) return showMessage("Seleziona un intervallo di date valido.", true);
+
+                 const playersAtDate = players.map(p => {
+                     const historyUntilDate = p.history.filter(h => h.date <= endDate);
+                     const elo = historyUntilDate.length > 0 ? historyUntilDate[historyUntilDate.length - 1].elo : INITIAL_ELO;
+                     return {...p, elo: Math.round(elo) };
+                 });
+
+                 renderPlayers(playersAtDate);
+            }
+
+            function renderMatches() {
+                const startDate = matchHistoryStartDate.value;
+                const endDate = matchHistoryEndDate.value;
+                
+                let filteredMatches = matches;
+                if(startDate && endDate) {
+                    filteredMatches = matches.filter(m => m.date >= startDate && m.date <= endDate);
+                }
+                 
+                filteredMatches.sort((a, b) => {
+                    const [sortBy, sortOrder] = matchHistorySort.split('_');
+                    if (sortBy === 'date') return sortOrder === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date);
+                    if (sortBy === 'elo') {
+                        if (!a.teamA_elos || !b.teamA_elos) return 0;
+                        const avgEloA = (a.teamA_elos.attack + a.teamA_elos.defense + a.teamB_elos.attack + a.teamB_elos.defense) / 4;
+                        const avgEloB = (b.teamA_elos.attack + b.teamA_elos.defense + b.teamB_elos.attack + b.teamB_elos.defense) / 4;
+                        return sortOrder === 'desc' ? avgEloB - avgEloA : avgEloA - avgEloB;
+                    }
+                    return 0;
+                });
+
+                matchHistoryContainer.innerHTML = filteredMatches.length ? '' : `<p class="text-gray-500 text-center py-4">Nessuna partita trovata.</p>`;
+                
+                filteredMatches.forEach(match => {
+                    const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
+                    const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
+                    if (!teamAPlayers.attack || !teamBPlayers.attack) return;
+
+                    const eloChangeStringA = match.winner === 'A' ? `+${Math.round(match.eloChange)}` : `${Math.round(match.eloChange)}`;
+                    const eloChangeStringB = match.winner === 'B' ? `+${Math.round(-match.eloChange)}` : `${Math.round(-match.eloChange)}`;
+
+                    const matchRow = document.createElement('div');
+                    matchRow.className = 'grid grid-cols-1 md:grid-cols-4 items-center gap-2 p-3 bg-gray-50 rounded-lg';
+                     matchRow.innerHTML = `
+                        <div class="text-sm text-gray-600 font-medium">${new Date(match.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                        <div class="md:col-span-2 flex flex-col md:flex-row md:items-center justify-center text-center gap-2 md:gap-4 text-sm">
+                            <span class="truncate ${match.winner === 'A' ? 'font-bold team-a-color' : 'text-gray-500'}">⚔️${teamAPlayers.attack.name} & 🛡️${teamAPlayers.defense.name} <span class="text-xs font-normal ${eloChangeStringA.startsWith('+') ? 'text-green-600' : 'text-red-600'}">(${eloChangeStringA})</span></span>
+                            <span class="text-gray-400 font-bold text-xs">VS</span>
+                            <span class="truncate ${match.winner === 'B' ? 'font-bold text-gray-800' : 'text-gray-500'}">⚔️${teamBPlayers.attack.name} & 🛡️${teamBPlayers.defense.name} <span class="text-xs font-normal ${eloChangeStringB.startsWith('+') ? 'text-green-600' : 'text-red-600'}">(${eloChangeStringB})</span></span>
+                        </div>
+                        <div class="flex justify-end items-center">
+                             <button class="btn-danger text-xs px-2 py-1 rounded" data-id="${match.id}">Elimina</button>
+                        </div>`;
+
+                    matchRow.querySelector('button').addEventListener('click', () => openConfirmationModal(match.id));
+                    matchHistoryContainer.appendChild(matchRow);
+                });
+            }
+
+            function renderComparisonSelectors() {
+                const sortedPlayers = [...players].sort((a,b) => a.name.localeCompare(b.name));
+                
+                comparisonPlayerList.innerHTML = '';
+                synergyPivotPlayer.innerHTML = '<option value="">Seleziona...</option>';
+                partnerFinderPlayer.innerHTML = '<option value="">Seleziona Giocatore</option>';
+                
+                sortedPlayers.forEach(player => {
+                    const optionHTML = `<option value="${player.id}">${player.name}</option>`;
+                    comparisonPlayerList.innerHTML += `
+                    <label class="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-gray-100">
+                        <input type="checkbox" value="${player.id}" class="rounded border-gray-300 text-[--primary] focus:ring-[--primary]">
+                        <span>${player.name}</span>
+                    </label>`;
+                    synergyPivotPlayer.innerHTML += optionHTML;
+                    partnerFinderPlayer.innerHTML += optionHTML;
+                });
+            }
+
+            function updateTeamEloDisplays() {
+                const pA_att_id = teamASelects.attack.value;
+                const pA_def_id = teamASelects.defense.value;
+                if (pA_att_id && pA_def_id && pA_att_id !== pA_def_id) {
+                    const p1 = getPlayer(parseInt(pA_att_id));
+                    const p2 = getPlayer(parseInt(pA_def_id));
+                    teamAEloDisplay.textContent = `ELO: ${Math.round((p1.elo + p2.elo) / 2)}`;
+                } else {
+                    teamAEloDisplay.textContent = 'ELO: -';
+                }
+
+                const pB_att_id = teamBSelects.attack.value;
+                const pB_def_id = teamBSelects.defense.value;
+                if (pB_att_id && pB_def_id && pB_att_id !== pB_def_id) {
+                    const p1 = getPlayer(parseInt(pB_att_id));
+                    const p2 = getPlayer(parseInt(pB_def_id));
+                    teamBEloDisplay.textContent = `ELO: ${Math.round((p1.elo + p2.elo) / 2)}`;
+                } else {
+                    teamBEloDisplay.textContent = 'ELO: -';
+                }
+
+                teamAssistantBtn.disabled = !(teamASelects.attack.value && teamASelects.defense.value && teamASelects.attack.value !== teamASelects.defense.value);
+            }
+            
+            // --- Analisi & Matchmaking ---
+            function openTeamAssistantModal() {
+                 const currentTab = document.querySelector('.assistant-tab.active').dataset.tab;
+                 if(currentTab === 'opponents') showOpponentProposals();
+                 else renderPartnerFinder();
+                 teamAssistantModal.classList.remove('hidden');
+            }
+
+            function showOpponentProposals() {
+                const pA_att = getPlayer(parseInt(teamASelects.attack.value));
+                const pA_def = getPlayer(parseInt(teamASelects.defense.value));
+                
+                if(!pA_att || !pA_def) {
+                     assistantOpponentsContent.innerHTML = `<p class="text-center text-gray-500 py-4">Seleziona la tua squadra per trovare avversari.</p>`;
+                     return;
+                }
+
+                const teamAElo = (pA_att.elo + pA_def.elo) / 2;
+
+                const availablePlayers = players.filter(p => p.id !== pA_att.id && p.id !== pA_def.id);
+                if (availablePlayers.length < 2) {
+                    assistantOpponentsContent.innerHTML = `<p class="text-center text-gray-500 py-4">Non ci sono abbastanza giocatori per formare una squadra avversaria.</p>`;
+                    return;
+                };
+
+                let opponentPairs = [];
+                for (let i = 0; i < availablePlayers.length; i++) {
+                    for (let j = 0; j < availablePlayers.length; j++) {
+                        if (i === j) continue;
+                        const p_att = availablePlayers[i];
+                        const p_def = availablePlayers[j];
+                        
+                        opponentPairs.push({ attack: p_att, defense: p_def, avgElo: (p_att.elo + p_def.elo) / 2 });
+                    }
+                }
+                
+                const proposals = {
+                    "🏆 La Partita Equilibrata": { pair: [...opponentPairs].sort((a,b) => Math.abs(a.avgElo - teamAElo) - Math.abs(b.avgElo - teamAElo))[0], desc: "La sfida più bilanciata sulla carta. L'esito è incerto." },
+                    "⚔️ Scontro tra Titani": { pair: [...opponentPairs].sort((a, b) => b.avgElo - a.avgElo)[0], desc: "Affronta la coppia con l'ELO combinato più alto." },
+                    "🛡️ Attacco vs Difesa": { pair: [...opponentPairs].sort((a,b) => Math.abs((b.attack.elo - b.defense.elo) - (pA_att.elo - pA_def.elo)))[0], desc: "Uno scontro di stili, contro una coppia dal bilanciamento opposto." },
+                    "🎭 La Sfida Speculare": { pair: [...opponentPairs].sort((a,b) => (Math.abs(a.attack.elo - pA_att.elo) + Math.abs(a.defense.elo - pA_def.elo)) - (Math.abs(b.attack.elo - pA_att.elo) + Math.abs(b.defense.elo - pA_def.elo)))[0], desc: "Competi contro una squadra con un profilo di ELO simile." }
+                };
+
+                assistantOpponentsContent.innerHTML = '';
+                Object.entries(proposals).forEach(([title, data]) => {
+                    const {pair, desc} = data;
+                    const card = document.createElement('div');
+                    card.className = 'p-4 border rounded-lg cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all';
+                    card.dataset.attackId = pair.attack.id;
+                    card.dataset.defenseId = pair.defense.id;
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-800">${title}</h4>
+                                <p class="text-sm text-gray-600 mt-1">${desc}</p>
+                            </div>
+                            <div class="text-right ml-4 flex-shrink-0">
+                                <p class="font-bold text-lg" style="color:var(--primary)">${Math.round(pair.avgElo)}</p>
+                                <p class="text-xs text-gray-500">ELO Medio</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-sm font-semibold">
+                            <span>⚔️ ${pair.attack.name} (${Math.round(pair.attack.elo)})</span> & 
+                            <span>🛡️ ${pair.defense.name} (${Math.round(pair.defense.elo)})</span>
+                        </div>`;
+                    assistantOpponentsContent.appendChild(card);
+                });
+            }
+
+            function renderPartnerFinder() {
+                const playerId = parseInt(partnerFinderPlayer.value);
+                const playerRole = partnerFinderRole.value;
+                const startDate = partnerFinderStartDate.value;
+                const endDate = partnerFinderEndDate.value;
+
+                if (!playerId) {
+                    partnerList.innerHTML = `<p class="text-center text-gray-500 py-4">Seleziona un giocatore per iniziare.</p>`;
+                    return;
+                }
+                const player = getPlayer(playerId);
+                const partnerRole = playerRole === 'attack' ? 'defense' : 'attack';
+                const availablePartners = players.filter(p => p.id !== playerId);
+
+                const rankedPartners = availablePartners.map(partner => {
+                    const duoMatches = matches.filter(m => {
+                        const inPeriod = (!startDate || !endDate) || (m.date >= startDate && m.date <= endDate);
+                        if (!inPeriod) return false;
+                        
+                        const teamA = m.teamA;
+                        const teamB = m.teamB;
+                        
+                        return (teamA[playerRole] === player.id && teamA[partnerRole] === partner.id) ||
+                               (teamB[playerRole] === player.id && teamB[partnerRole] === partner.id);
+                    });
+
+                    if (duoMatches.length === 0) {
+                        return { partner, matches: 0, wins: 0, medianElo: (player.elo + partner.elo) / 2, basedOn: 'elo' };
+                    }
+                    
+                    const wins = duoMatches.filter(m => {
+                         const inTeamA = m.teamA[playerRole] === player.id;
+                         return (inTeamA && m.winner === 'A') || (!inTeamA && m.winner === 'B');
+                    }).length;
+
+                    const teamElos = duoMatches.map(m => {
+                         const inTeamA = m.teamA[playerRole] === player.id;
+                         const elos = inTeamA ? m.teamA_elos : m.teamB_elos;
+                         return (elos.attack + elos.defense) / 2;
+                    });
+                    
+                    return { partner, matches: duoMatches.length, wins, medianElo: calculateMedian(teamElos), basedOn: 'performance' };
+                }).sort((a, b) => b.medianElo - a.medianElo);
+
+                partnerList.innerHTML = '';
+                 rankedPartners.forEach(data => {
+                    const card = document.createElement('div');
+                    card.className = 'flex justify-between items-center p-3 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100';
+                    card.dataset.playerId = playerId;
+                    card.dataset.playerRole = playerRole;
+                    card.dataset.partnerId = data.partner.id;
+                    card.dataset.partnerRole = partnerRole;
+                     const partnerRoleIcon = partnerRole === 'attack' ? '⚔️' : '🛡️';
+                    const partnerRoleText = partnerRole === 'attack' ? 'Attacco' : 'Difesa';
+                    const losses = data.matches - data.wins;
+                    
+                    card.innerHTML = `
+                        <div>
+                            <p class="font-semibold text-gray-800">${data.partner.name}</p>
+                            <p class="text-sm text-gray-500">Proposto come: <span class="font-semibold">${partnerRoleIcon} ${partnerRoleText}</span></p>
+                        </div>
+                        <div class="text-right">
+                             <p class="font-bold text-lg" style="color:var(--primary)">${Math.round(data.medianElo)} <span class="text-sm font-normal text-gray-500">${data.basedOn === 'performance' ? 'ELO Med.' : 'ELO St.'}</span></p>
+                             ${data.matches > 0 ? `<div class="text-xs font-semibold mt-1"><span class="text-green-600">${data.wins}V</span> / <span class="text-red-600">${losses}S</span> <span class="text-gray-400 font-normal">(${data.matches} G)</span></div>` : '<p class="text-xs text-gray-400 mt-1">Nessun precedente</p>'}
+                        </div>`;
+                    partnerList.appendChild(card);
+                });
+            }
+
+
+            // --- Gestione Grafici e Modal ---
+
+            function openHistoryModal(playerId) {
+                currentlyViewingPlayerId = playerId;
+                const player = getPlayer(playerId);
+                if (!player) return;
+                
+                historyModalTitle.textContent = `Analisi: ${player.name}`;
+                const dates = player.history.slice(1).map(h => h.date).sort();
+                historyStartDateInput.value = dates.length ? dates[0] : '';
+                historyEndDateInput.value = dates.length ? dates[dates.length - 1] : '';
+                
+                switchTab('chart');
+                updateAllPlayerData();
+                historyModal.classList.remove('hidden');
+            }
+
+            function switchTab(tabName) {
+                Object.values(playerAnalysisTabs).forEach(t => t.classList.remove('active'));
+                Object.values(playerAnalysisContents).forEach(c => c.classList.add('hidden'));
+
+                playerAnalysisTabs[tabName].classList.add('active');
+                playerAnalysisContents[tabName].classList.remove('hidden');
+            }
+
+            function updateAllPlayerData() {
+                renderSingleHistoryChart();
+                renderPlayerMatchHistory();
+                renderPlayerStats();
+            }
+
+            function renderSingleHistoryChart() {
+                const player = getPlayer(currentlyViewingPlayerId);
+                const startDate = historyStartDateInput.value;
+                const endDate = historyEndDateInput.value;
+                const filteredHistory = player.history.slice(1).filter(h => h.date >= startDate && h.date <= endDate);
+                
+                if (singleHistoryChart) singleHistoryChart.destroy();
+                singleHistoryChart = new Chart(document.getElementById('eloHistoryChart').getContext('2d'), {
+                    type: 'line', data: {
+                        labels: filteredHistory.map(h => new Date(h.date).toLocaleDateString('it-IT')),
+                        datasets: [{
+                            label: 'Punteggio ELO', data: filteredHistory.map(h => h.elo),
+                            borderColor: 'var(--accent)', backgroundColor: 'rgba(255, 210, 46, 0.15)',
+                            fill: true, tension: 0.1
+                        }]
+                    }, options: { responsive: true, scales: {
+                        y: { ticks: { color: 'var(--text-muted)' }, grid: { color: 'rgba(0, 0, 0, 0.05)'}},
+                        x: { ticks: { color: 'var(--text-muted)' }, grid: { display: false }}
+                    }, plugins: { legend: { display: false } } }
+                });
+            }
+            
+            function renderPlayerStats() {
+                const player = getPlayer(currentlyViewingPlayerId);
+                const startDate = historyStartDateInput.value;
+                const endDate = historyEndDateInput.value;
+                const playerMatches = matches.filter(m => (m.teamA.attack === player.id || m.teamA.defense === player.id || m.teamB.attack === player.id || m.teamB.defense === player.id) && m.date >= startDate && m.date <= endDate);
+
+                // Summary Cards
+                statsMatchesPlayed.textContent = playerMatches.length;
+                const wins = playerMatches.filter(m => {
+                    const isPlayerInTeamA = m.teamA.attack === player.id || m.teamA.defense === player.id;
+                    return (isPlayerInTeamA && m.winner === 'A') || (!isPlayerInTeamA && m.winner === 'B');
+                }).length;
+                statsWinRate.textContent = playerMatches.length > 0 ? `${Math.round((wins / playerMatches.length) * 100)}%` : '-';
+                
+                const eloHistoryInRange = player.history.filter(h => h.date >= startDate && h.date <= endDate && new Date(h.date).getTime() !== 0);
+                let eloChange = 0;
+                if(eloHistoryInRange.length > 0) {
+                    const startElo = (player.history.filter(h => h.date < startDate).pop() || player.history[0]).elo;
+                    const endElo = eloHistoryInRange[eloHistoryInRange.length - 1].elo;
+                    eloChange = endElo - startElo;
+                }
+                statsEloChange.textContent = `${eloChange >= 0 ? '+' : ''}${Math.round(eloChange)}`;
+                statsEloChange.className = `text-2xl font-bold ${eloChange > 0 ? 'text-green-600' : eloChange < 0 ? 'text-red-600' : 'text-gray-800'}`;
+                
+                // Role Analysis
+                const attackMatches = playerMatches.filter(m => m.teamA.attack === player.id || m.teamB.attack === player.id);
+                const defenseMatches = playerMatches.filter(m => m.teamA.defense === player.id || m.teamB.defense === player.id);
+                const attackWins = attackMatches.filter(m => ((m.teamA.attack === player.id && m.winner === 'A') || (m.teamB.attack === player.id && m.winner === 'B'))).length;
+                const defenseWins = defenseMatches.filter(m => ((m.teamA.defense === player.id && m.winner === 'A') || (m.teamB.defense === player.id && m.winner === 'B'))).length;
+                const attackWinRate = attackMatches.length > 0 ? (attackWins / attackMatches.length) * 100 : -1;
+                const defenseWinRate = defenseMatches.length > 0 ? (defenseWins / defenseMatches.length) * 100 : -1;
+
+                statsBestRole.textContent = attackWinRate > defenseWinRate ? '⚔️ Attacco' : defenseWinRate > attackWinRate ? '🛡️ Difesa' : '-';
+
+                // Teammate Synergy Analysis
+                const teammateStats = {};
+                playerMatches.forEach(match => {
+                    const isPlayerInTeamA = match.teamA.attack === player.id || match.teamA.defense === player.id;
+                    const playerRole = isPlayerInTeamA ? (match.teamA.attack === player.id ? 'attack' : 'defense') : (match.teamB.attack === player.id ? 'attack' : 'defense');
+                    const team = isPlayerInTeamA ? match.teamA : match.teamB;
+                    const teamElos = isPlayerInTeamA ? match.teamA_elos : match.teamB_elos;
+                    const teammateId = playerRole === 'attack' ? team.defense : team.attack;
+                    
+                    if (!teammateId || !getPlayer(teammateId)) return;
+
+                    const key = `${teammateId}-${playerRole}`;
+                    if (!teammateStats[key]) {
+                        teammateStats[key] = { id: teammateId, name: getPlayer(teammateId).name, playerRole, matches: 0, wins: 0, teamElos: [] };
+                    }
+                    
+                    const stats = teammateStats[key];
+                    stats.matches++;
+                    if ((isPlayerInTeamA && match.winner === 'A') || (!isPlayerInTeamA && match.winner === 'B')) stats.wins++;
+                    stats.teamElos.push((teamElos.attack + teamElos.defense) / 2);
+                });
+                
+                const teammates = Object.values(teammateStats);
+                teammates.forEach(t => t.medianElo = calculateMedian(t.teamElos));
+                teammates.sort((a, b) => b.medianElo - a.medianElo);
+                
+                bestTeammatesContainer.innerHTML = teammates.length ? '' : `<p class="text-center text-gray-500 py-4">Nessuna sinergia analizzabile in questo periodo.</p>`;
+                teammates.forEach(t => {
+                    const losses = t.matches - t.wins;
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg flex-wrap gap-2';
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="font-semibold text-gray-800">${t.name}</span>
+                            <span class="text-xs font-bold p-1 rounded ${t.playerRole === 'attack' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}">Tu ${t.playerRole === 'attack' ? '⚔️' : '🛡️'}</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm text-right">
+                             <div class="font-semibold"><span class="text-green-600">${t.wins}V</span> / <span class="text-red-600">${losses}S</span> <span class="text-gray-400 font-normal">(${t.matches} G)</span></div>
+                             <div class="font-bold text-lg" style="color:var(--primary)">${Math.round(t.medianElo)} <span class="text-sm font-normal text-gray-500">ELO Med.</span></div>
+                        </div>`;
+                    bestTeammatesContainer.appendChild(row);
+                });
+            }
+
+            function renderPlayerMatchHistory() {
+                const player = getPlayer(currentlyViewingPlayerId);
+                const startDate = historyStartDateInput.value;
+                const endDate = historyEndDateInput.value;
+                const playerMatches = matches.filter(m => (m.teamA.attack === player.id || m.teamA.defense === player.id || m.teamB.attack === player.id || m.teamB.defense === player.id) && m.date >= startDate && m.date <= endDate);
+                playerMatches.sort((a,b) => playerMatchSortSelect.value === 'date_desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
+
+                playerMatchHistoryContainer.innerHTML = playerMatches.length ? '' : `<p class="text-center text-gray-500 py-4">Nessuna partita in questo periodo.</p>`;
+                playerMatches.forEach(match => {
+                    const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
+                    const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
+                    const isPlayerInTeamA = match.teamA.attack === player.id || match.teamA.defense === player.id;
+                    const didPlayerWin = (isPlayerInTeamA && match.winner === 'A') || (!isPlayerInTeamA && match.winner === 'B');
+                    const resultClass = didPlayerWin ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    
+                    const eloChange = Math.round(didPlayerWin ? match.eloChange : -match.eloChange);
+                    const resultText = didPlayerWin ? 'Vittoria' : 'Sconfitta';
+
+                    const matchDiv = document.createElement('div');
+                    matchDiv.className = 'border border-gray-200 rounded-lg';
+                    matchDiv.innerHTML = `
+                        <button class="player-match-accordion-header w-full p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg">
+                            <div class="flex justify-between items-center flex-wrap gap-2">
+                                <div>
+                                    <span class="font-bold text-gray-800">${new Date(match.date).toLocaleDateString('it-IT')}</span>
+                                    <span class="text-sm text-gray-500 ml-2">${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} vs ${teamBPlayers.attack.name} & ${teamBPlayers.defense.name}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                     <span class="font-bold text-sm px-2 py-1 rounded-full ${resultClass}">${resultText} (${eloChange >= 0 ? '+' : ''}${eloChange} ELO)</span>
+                                     <svg class="w-5 h-5 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </div>
+                            </div>
+                        </button>
+                        <div class="player-match-accordion-content hidden p-4 border-t border-gray-200 bg-white rounded-b-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="team-a-color">
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra A (ELO Medio: ${Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2)})</h4>
+                                    <p>⚔️ ${teamAPlayers.attack.name}: <span class="font-semibold">${match.teamA_elos.attack}</span></p>
+                                    <p>🛡️ ${teamAPlayers.defense.name}: <span class="font-semibold">${match.teamA_elos.defense}</span></p>
+                                </div>
+                                <div class="team-b-color">
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra B (ELO Medio: ${Math.round((match.teamB_elos.attack + match.teamB_elos.defense) / 2)})</h4>
+                                    <p>⚔️ ${teamBPlayers.attack.name}: <span class="font-semibold">${match.teamB_elos.attack}</span></p>
+                                    <p>🛡️ ${teamBPlayers.defense.name}: <span class="font-semibold">${match.teamB_elos.defense}</span></p>
+                                </div>
+                            </div>
+                        </div>`;
+                    playerMatchHistoryContainer.appendChild(matchDiv);
+                });
+            }
+
+            function handleComparison() {
+                const selectedPlayerIds = Array.from(comparisonPlayerList.querySelectorAll('input:checked')).map(cb => parseInt(cb.value));
+                const startDate = comparisonStartDateInput.value, endDate = comparisonEndDateInput.value;
+                if (!startDate || !endDate) return showMessage("Seleziona un intervallo di date.", true);
+
+                if (comparisonMode === 'general') handleGeneralComparison(selectedPlayerIds, startDate, endDate);
+                if (comparisonMode === 'roles') handleRoleComparison(selectedPlayerIds, startDate, endDate);
+                if (comparisonMode === 'synergy') handleSynergyComparison(selectedPlayerIds, startDate, endDate);
+            }
+
+            function handleGeneralComparison(playerIds, startDate, endDate) {
+                if (playerIds.length < 2) return showMessage("Seleziona almeno due giocatori.", true);
+                
+                const selectedPlayers = getPlayers(playerIds);
+                const allDates = new Set();
+                selectedPlayers.forEach(p => { p.history.slice(1).forEach(h => {
+                    const d = new Date(h.date);
+                    if (d >= new Date(startDate) && d <= new Date(endDate)) allDates.add(h.date);
+                }); });
+                const sortedDates = Array.from(allDates).sort();
+                
+                const datasets = selectedPlayers.map((player, index) => {
+                    let lastElo = player.history[0].elo;
+                    const data = sortedDates.map(date => {
+                        const historyOnDate = player.history.filter(h => h.date <= date);
+                        return historyOnDate.length > 0 ? historyOnDate[historyOnDate.length - 1].elo : lastElo;
+                    });
+                    return { label: player.name, data: data, borderColor: CHART_COLORS[index % CHART_COLORS.length], backgroundColor: 'transparent', tension: 0.1 };
+                });
+                
+                comparisonModalTitle.textContent = "Confronto Generale ELO";
+                comparisonModalContent.innerHTML = `<canvas id="eloComparisonChart"></canvas>`;
+                renderComparisonChart('line', sortedDates.map(d => new Date(d).toLocaleDateString('it-IT')), datasets);
+                comparisonModal.classList.remove('hidden');
+            }
+
+            function handleRoleComparison(playerIds, startDate, endDate) {
+                if (playerIds.length < 1) return showMessage("Seleziona almeno un giocatore.", true);
+                
+                const selectedRole = rolesSelect.value;
+                const selectedPlayers = getPlayers(playerIds);
+                
+                const tableRows = selectedPlayers.map(player => {
+                    const roleMatches = matches.filter(m => ((m.teamA[selectedRole] === player.id || m.teamB[selectedRole] === player.id)) && m.date >= startDate && m.date <= endDate);
+                    const wins = roleMatches.filter(m => (m.teamA[selectedRole] === player.id && m.winner === 'A') || (m.teamB[selectedRole] === player.id && m.winner === 'B')).length;
+                    const winRate = roleMatches.length > 0 ? (wins / roleMatches.length) * 100 : 0;
+                    
+                    const eloChanges = roleMatches.map(m => {
+                        const historyIndex = player.history.findIndex(h => h.date === m.date);
+                        if (historyIndex > 0) return player.history[historyIndex].elo - player.history[historyIndex - 1].elo;
+                        return 0;
+                    }).filter(c => c !== 0);
+                    const avgEloChange = eloChanges.length > 0 ? eloChanges.reduce((a,b) => a+b, 0) / eloChanges.length : 0;
+
+                    return `
+                        <tr class="border-b">
+                            <td class="p-2 font-semibold">${player.name}</td>
+                            <td class="p-2 text-center">${roleMatches.length}</td>
+                            <td class="p-2 text-center font-bold ${winRate >= 50 ? 'text-green-600' : 'text-red-600'}">${winRate.toFixed(1)}%</td>
+                            <td class="p-2 text-center font-bold ${avgEloChange >= 0 ? 'text-green-600' : 'text-red-600'}">${avgEloChange >= 0 ? '+' : ''}${avgEloChange.toFixed(1)}</td>
+                        </tr>`;
+                }).join('');
+
+                comparisonModalTitle.textContent = `Analisi Ruolo: ${selectedRole === 'attack' ? '⚔️ Attacco' : '🛡️ Difesa'}`;
+                comparisonModalContent.innerHTML = `
+                    <p class="text-sm text-gray-600 mb-4">Confronto delle performance dei giocatori quando schierati nel ruolo selezionato.</p>
+                    <table class="w-full text-sm">
+                        <thead><tr class="border-b"><th class="p-2 text-left">Giocatore</th><th class="p-2">Partite</th><th class="p-2">% Vittorie</th><th class="p-2">ELO Medio/Partita</th></tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>`;
+                comparisonModal.classList.remove('hidden');
+            }
+
+            function handleSynergyComparison(playerIds, startDate, endDate) {
+                const pivotPlayerId = parseInt(synergyPivotPlayer.value);
+                if (!pivotPlayerId) return showMessage("Seleziona un giocatore 'pilastro' per l'analisi.", true);
+                if (playerIds.length < 1) return showMessage("Seleziona almeno un compagno da confrontare.", true);
+
+                const pivotPlayer = getPlayer(pivotPlayerId);
+                const partners = getPlayers(playerIds.filter(id => id !== pivotPlayerId));
+
+                const synergyData = partners.map(partner => {
+                    const duoMatches = matches.filter(m => {
+                        const teamAids = Object.values(m.teamA);
+                        const teamBids = Object.values(m.teamB);
+                        return ((teamAids.includes(pivotPlayer.id) && teamAids.includes(partner.id)) || (teamBids.includes(pivotPlayer.id) && teamBids.includes(partner.id))) && m.date >= startDate && m.date <= endDate;
+                    });
+                    
+                    const scenario1 = { matches: 0, wins: 0, teamElos: [] }; // Pivot Attack, Partner Defense
+                    const scenario2 = { matches: 0, wins: 0, teamElos: [] }; // Pivot Defense, Partner Attack
+
+                    duoMatches.forEach(m => {
+                        const inTeamA = Object.values(m.teamA).includes(pivotPlayer.id);
+                        const team = inTeamA ? m.teamA : m.teamB;
+                        const elos = inTeamA ? m.teamA_elos : m.teamB_elos;
+                        const won = (inTeamA && m.winner === 'A') || (!inTeamA && m.winner === 'B');
+
+                        if (team.attack === pivotPlayer.id && team.defense === partner.id) {
+                            scenario1.matches++;
+                            if(won) scenario1.wins++;
+                            scenario1.teamElos.push((elos.attack + elos.defense) / 2);
+                        } else if (team.defense === pivotPlayer.id && team.attack === partner.id) {
+                            scenario2.matches++;
+                            if(won) scenario2.wins++;
+                            scenario2.teamElos.push((elos.attack + elos.defense) / 2);
+                        }
+                    });
+
+                    return { 
+                        name: partner.name, 
+                        scenario1: { ...scenario1, winRate: scenario1.matches > 0 ? (scenario1.wins/scenario1.matches)*100 : 0, medianElo: calculateMedian(scenario1.teamElos) },
+                        scenario2: { ...scenario2, winRate: scenario2.matches > 0 ? (scenario2.wins/scenario2.matches)*100 : 0, medianElo: calculateMedian(scenario2.teamElos) }
+                    };
+                }).sort((a,b) => Math.max(b.scenario1.medianElo, b.scenario2.medianElo) - Math.max(a.scenario1.medianElo, a.scenario2.medianElo));
+
+                comparisonModalTitle.textContent = `Analisi Sinergie con ${pivotPlayer.name}`;
+                
+                if(synergyData.every(d => d.scenario1.matches === 0 && d.scenario2.matches === 0)){
+                     comparisonModalContent.innerHTML = `<p class="text-center text-gray-500 py-4">Nessuna partita giocata con i compagni selezionati in questo periodo.</p>`;
+                } else {
+                    comparisonModalContent.innerHTML = synergyData.map(data => {
+                        return `
+                        <div class="p-4 border rounded-lg mb-4">
+                            <h3 class="font-bold text-lg text-gray-800">${data.name}</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                <div class="p-3 rounded ${data.scenario1.matches > 0 ? 'bg-gray-100' : 'bg-gray-50 text-gray-400'}">
+                                    <p class="font-semibold">Tu ⚔️ & Lui/Lei 🛡️</p>
+                                    ${data.scenario1.matches > 0 ? `
+                                    <p class="text-sm mt-1">Partite: <span class="font-semibold">${data.scenario1.matches}</span></p>
+                                    <p class="text-sm">Vittorie: <span class="font-semibold">${data.scenario1.winRate.toFixed(0)}%</span></p>
+                                    <p class="text-sm">ELO Mediano Squadra: <span class="font-semibold">${Math.round(data.scenario1.medianElo)}</span></p>
+                                    ` : '<p class="text-sm mt-1">Nessuna partita</p>'}
+                                </div>
+                                <div class="p-3 rounded ${data.scenario2.matches > 0 ? 'bg-gray-100' : 'bg-gray-50 text-gray-400'}">
+                                    <p class="font-semibold">Tu 🛡️ & Lui/Lei ⚔️</p>
+                                     ${data.scenario2.matches > 0 ? `
+                                    <p class="text-sm mt-1">Partite: <span class="font-semibold">${data.scenario2.matches}</span></p>
+                                    <p class="text-sm">Vittorie: <span class="font-semibold">${data.scenario2.winRate.toFixed(0)}%</span></p>
+                                    <p class="text-sm">ELO Mediano Squadra: <span class="font-semibold">${Math.round(data.scenario2.medianElo)}</span></p>
+                                    ` : '<p class="text-sm mt-1">Nessuna partita</p>'}
+                                </div>
+                            </div>
+                        </div>
+                        `
+                    }).join('');
+                }
+                comparisonModal.classList.remove('hidden');
+            }
+            
+            function renderComparisonChart(type, labels, datasets) {
+                if (comparisonChart) comparisonChart.destroy();
+                const container = document.getElementById('eloComparisonChart');
+                if(!container) return;
+                comparisonChart = new Chart(container.getContext('2d'), {
+                    type: type, 
+                    data: { labels, datasets }, 
+                    options: { responsive: true, plugins: { legend: { position: 'top', display: datasets.length > 1 } } }
+                });
+            }
+
+            // --- Eliminazione Multipla ---
+            function handleBulkDeletePreview() {
+                const startDate = bulkDeleteStartDateInput.value, endDate = bulkDeleteEndDateInput.value;
+                if (!startDate || !endDate) return showMessage("Seleziona un intervallo di date.", true);
+                const matchesInRange = matches.filter(m => m.date >= startDate && m.date <= endDate);
+                if (matchesInRange.length === 0) return showMessage("Nessuna partita trovata.", false);
+
+                matchesToDeleteIds = matchesInRange.map(m => m.id);
+                bulkDeleteSummaryText.textContent = `Stai per eliminare ${matchesInRange.length} partite. L'azione è irreversibile.`;
+                confirmBulkDeleteBtn.textContent = `Conferma Eliminazione (${matchesInRange.length} partite)`;
+                renderMatches(bulkDeleteMatchList, matchesInRange);
+                confirmBulkDeleteModal.classList.remove('hidden');
+            }
+
+            // --- Accordion ---
+            function setupAccordions() {
+                document.querySelectorAll('.accordion-header').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const content = button.nextElementSibling;
+                        const icon = button.querySelector('svg');
+                        content.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    });
+                });
+
+                playerMatchHistoryContainer.addEventListener('click', e => {
+                    const header = e.target.closest('.player-match-accordion-header');
+                    if (header) {
+                        header.nextElementSibling.classList.toggle('hidden');
+                        header.querySelector('svg').classList.toggle('rotate-180');
+                    }
+                });
+            }
+
+            // --- Import/Export e Persistenza ---
+            async function linkFile() {
+                try {
+                    fileHandle = await window.showSaveFilePicker({
+                        suggestedName: 'dati.json',
+                        types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }]
+                    });
+                    const file = await fileHandle.getFile();
+                    const contents = await file.text();
+                    if(contents) { // If file has content, load it
+                        loadData(JSON.parse(contents));
+                        showMessage("File collegato e dati caricati!");
+                    } else { // If new file, save current state to it
+                        await saveToFile();
+                        showMessage("Nuovo file collegato e dati iniziali salvati!");
+                    }
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error(err);
+                        showMessage("Errore nel collegamento del file.", true);
+                    }
+                }
+            }
+
+            async function saveToFile() {
+                if (!fileHandle) return;
+                try {
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(JSON.stringify({ players, matches }));
+                    await writable.close();
+                } catch (err) {
+                    console.error("Errore salvataggio su file:", err);
+                    showMessage("Errore nel salvataggio su file. I dati sono salvati localmente.", true);
+                    fileHandle = null; // Reset handle if permission is lost
+                }
+            }
+
+            function loadData(data) {
+                if (!data.players || !data.matches) throw new Error("File non valido.");
+                
+                data.matches.forEach(m => {
+                    if (Array.isArray(m.teamA)) {
+                        m.teamA = { attack: m.teamA[0], defense: m.teamA[1] };
+                        m.teamB = { attack: m.teamB[0], defense: m.teamB[1] };
+                    }
+                });
+                players = data.players;
+                matches = data.matches;
+                recalculateAllElos();
+                saveAndRender();
+            }
+
+            function exportData() {
+                const dataString = JSON.stringify({ players, matches });
+                const blob = new Blob([dataString], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `foosball-lab-backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showMessage("Backup esportato!");
+            }
+
+            function importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        loadData(JSON.parse(e.target.result));
+                        showMessage("Backup importato con successo!");
+                    } catch (err) { showMessage(`Errore importazione: ${err.message}`, true); }
+                };
+                reader.readAsText(file);
+                importFileInput.value = '';
+            }
+            
+            async function saveAndRender() {
+                localStorage.setItem('foosballEloTracker', JSON.stringify({ players, matches }));
+                await saveToFile();
+                render();
+            }
+
+            function loadFromStorage() {
+                const storedState = localStorage.getItem('foosballEloTracker');
+                if (storedState) {
+                   loadData(JSON.parse(storedState));
+                }
+            }
+
+            // --- Inizializzazione ---
+            function init() {
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', () => {
+                        navigator.serviceWorker.register('/service-worker.js').catch(err => console.log('SW reg failed: ', err));
+                    });
+                }
+
+                matchDateInput.value = new Date().toISOString().split('T')[0];
+                addPlayerBtn.addEventListener('click', addPlayer);
+                playerNameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer(); });
+                recordMatchBtn.addEventListener('click', preRecordMatch);
+                
+                const setupSortButton = (btn, icon, sortBy) => {
+                    btn.addEventListener('click', () => {
+                        if (leaderboardSort.by === sortBy) leaderboardSort.order = leaderboardSort.order === 'desc' ? 'asc' : 'desc';
+                        else leaderboardSort = { by: sortBy, order: 'asc' };
+                        
+                        (sortBy === 'elo' ? nameSortIcon : eloSortIcon).style.transform = '';
+                        icon.style.transform = leaderboardSort.order === 'desc' ? 'rotate(180deg)' : '';
+                        if (sortBy === 'elo' && leaderboardSort.order === 'desc') icon.style.transform = '';
+                        
+                        const isPeriod = document.querySelector('input[name="rankType"]:checked').value === 'period';
+                        if(isPeriod) handleLeaderboardFilter();
+                        else renderPlayers();
+                    });
+                };
+                setupSortButton(nameSortBtn, nameSortIcon, 'name');
+                setupSortButton(eloSortBtn, eloSortIcon, 'elo');
+
+                matchSortSelect.addEventListener('change', (e) => {
+                    matchHistorySort = e.target.value;
+                    renderMatches();
+                });
+
+                allSelects.forEach(sel => sel.addEventListener('change', updateTeamEloDisplays));
+                teamAssistantBtn.addEventListener('click', openTeamAssistantModal);
+
+                // --- Event Listeners per Modals ---
+                closeHistoryModalBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
+                historyModal.addEventListener('click', e => { if(e.target === historyModal) historyModal.classList.add('hidden'); });
+                historyFilterBtn.addEventListener('click', updateAllPlayerData);
+                Object.values(playerAnalysisTabs).forEach(tab => tab.addEventListener('click', () => switchTab(tab.id.replace('tab', '').toLowerCase())));
+                playerMatchSortSelect.addEventListener('change', renderPlayerMatchHistory);
+                
+                comparisonTabs.forEach(tab => tab.addEventListener('click', (e) => {
+                    comparisonTabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    comparisonMode = e.target.dataset.tab;
+                    synergyControls.classList.toggle('hidden', comparisonMode !== 'synergy');
+                    rolesControls.classList.toggle('hidden', comparisonMode !== 'roles');
+                    playerListTitle.textContent = comparisonMode === 'synergy' ? "Seleziona Compagni da Confrontare" : "Seleziona Giocatori";
+                }));
+                compareBtn.addEventListener('click', handleComparison);
+                closeComparisonModalBtn.addEventListener('click', () => comparisonModal.classList.add('hidden'));
+                
+                assistantTabs.forEach(tab => tab.addEventListener('click', (e) => {
+                    assistantTabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const mode = e.target.dataset.tab;
+                    assistantOpponentsContent.classList.toggle('hidden', mode !== 'opponents');
+                    assistantPartnersContent.classList.toggle('hidden', mode !== 'partners');
+                    if (mode === 'opponents') showOpponentProposals();
+                    else renderPartnerFinder();
+                }));
+
+                partnerFinderPlayer.addEventListener('change', renderPartnerFinder);
+                partnerFinderRole.addEventListener('change', renderPartnerFinder);
+                partnerFinderStartDate.addEventListener('change', renderPartnerFinder);
+                partnerFinderEndDate.addEventListener('change', renderPartnerFinder);
+
+                partnerList.addEventListener('click', (e) => {
+                    const card = e.target.closest('[data-player-id]');
+                    if(card) {
+                        const {playerId, playerRole, partnerId, partnerRole} = card.dataset;
+                        teamASelects[playerRole].value = playerId;
+                        teamASelects[partnerRole].value = partnerId;
+                        updateTeamEloDisplays();
+                        teamAssistantModal.classList.add('hidden');
+                    }
+                });
+
+                closeTeamAssistantModal.addEventListener('click', () => teamAssistantModal.classList.add('hidden'));
+                assistantOpponentsContent.addEventListener('click', (e) => {
+                    const card = e.target.closest('[data-attack-id]');
+                    if (card) {
+                        teamBSelects.attack.value = card.dataset.attackId;
+                        teamBSelects.defense.value = card.dataset.defenseId;
+                        updateTeamEloDisplays();
+                        teamAssistantModal.classList.add('hidden');
+                    }
+                });
+                cancelRecordBtn.addEventListener('click', () => confirmRecordModal.classList.add('hidden'));
+                confirmRecordBtn.addEventListener('click', () => { recordMatch(); confirmRecordModal.classList.add('hidden'); });
+                cancelDeleteBtn.addEventListener('click', () => confirmDeleteModal.classList.add('hidden'));
+                confirmDeleteBtn.addEventListener('click', () => {
+                    if (matchIdToDelete) {
+                        deleteMatch(matchIdToDelete);
+                        recalculateAllElos();
+                        saveAndRender();
+                        showMessage("Partita eliminata.");
+                    }
+                    confirmDeleteModal.classList.add('hidden');
+                    matchIdToDelete = null;
+                });
+                bulkDeleteBtn.addEventListener('click', handleBulkDeletePreview);
+                cancelBulkDeleteBtn.addEventListener('click', () => confirmBulkDeleteModal.classList.add('hidden'));
+                confirmBulkDeleteBtn.addEventListener('click', () => {
+                    matches = matches.filter(m => !matchesToDeleteIds.includes(m.id));
+                    recalculateAllElos();
+                    saveAndRender();
+                    confirmBulkDeleteModal.classList.add('hidden');
+                    showMessage(`${matchesToDeleteIds.length} partite eliminate.`);
+                    matchesToDeleteIds = [];
+                });
+                linkFileBtn.addEventListener('click', linkFile);
+                exportBtn.addEventListener('click', exportData);
+                importBtn.addEventListener('click', () => importFileInput.click());
+                importFileInput.addEventListener('change', importData);
+
+                // Leaderboard filter logic
+                rankTypeRadios.forEach(radio => radio.addEventListener('change', (e) => {
+                    const isPeriod = e.target.value === 'period';
+                    leaderboardDateFilters.classList.toggle('hidden', !isPeriod);
+                    if (!isPeriod) renderPlayers(); // Reset to overall if switched back
+                }));
+                leaderboardFilterBtn.addEventListener('click', handleLeaderboardFilter);
+
+                matchHistoryFilterBtn.addEventListener('click', renderMatches);
+                matchHistoryResetBtn.addEventListener('click', () => {
+                    matchHistoryStartDate.value = '';
+                    matchHistoryEndDate.value = '';
+                    renderMatches();
+                });
+
+
+                setupAccordions();
+                loadFromStorage();
+                recalculateAllElos();
+                render();
+
+                const allMatchDates = matches.map(m => m.date).sort();
+                if (allMatchDates.length) {
+                    const firstDate = allMatchDates[0], lastDate = allMatchDates[allMatchDates.length - 1];
+                    [comparisonStartDateInput, bulkDeleteStartDateInput, leaderboardStartDate, matchHistoryStartDate, partnerFinderStartDate].forEach(i => i.value = firstDate);
+                    [comparisonEndDateInput, bulkDeleteEndDateInput, leaderboardEndDate, matchHistoryEndDate, partnerFinderEndDate].forEach(i => i.value = lastDate);
+                }
+            }
+            
+            init();
+        });
+    </script>
+</body>
+</html>
+

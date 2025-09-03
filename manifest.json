@@ -1,0 +1,22 @@
+{
+  "name": "Foosball Lab",
+  "short_name": "Foosball Lab",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#f8f9fa",
+  "description": "Un'applicazione per tracciare i punteggi ELO e analizzare le performance nel calcio balilla.",
+  "icons": [
+    {
+      "src": "./foosball_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./foosball_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+
