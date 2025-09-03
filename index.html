@@ -134,6 +134,22 @@
         .rank-1 { background-color: rgba(255, 210, 46, 0.2); border-left: 4px solid var(--accent); }
         .rank-2 { background-color: rgba(192, 192, 192, 0.2); border-left: 4px solid #adb5bd; }
         .rank-3 { background-color: rgba(205, 127, 50, 0.15); border-left: 4px solid #CD7F32; }
+        .wizard-action-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: left;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .wizard-action-card:hover {
+            border-color: var(--primary);
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+        }
+        body.modal-open {
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -267,17 +283,15 @@
                         </div>
                     </div>
                     <!-- Filtro Classifica -->
-                    <div class="flex items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
-                         <div class="flex items-center gap-2">
+                    <div class="flex flex-col sm:flex-row items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
+                         <div class="flex items-center gap-4">
                             <input type="radio" id="rankOverall" name="rankType" value="overall" class="text-[--primary] focus:ring-[--primary]" checked><label for="rankOverall" class="text-sm font-medium">Generale</label>
-                         </div>
-                         <div class="flex items-center gap-2">
                             <input type="radio" id="rankPeriod" name="rankType" value="period" class="text-[--primary] focus:ring-[--primary]"><label for="rankPeriod" class="text-sm font-medium">Periodo</label>
                          </div>
-                         <div id="leaderboardDateFilters" class="flex-grow flex items-center gap-2 hidden">
-                            <input type="date" id="leaderboardStartDate" class="text-sm p-1">
-                            <input type="date" id="leaderboardEndDate" class="text-sm p-1">
-                            <button id="leaderboardFilterBtn" class="btn btn-primary p-2 text-sm">Filtra</button>
+                         <div id="leaderboardDateFilters" class="w-full sm:w-auto flex-grow flex flex-col sm:flex-row items-center gap-2 hidden">
+                            <input type="date" id="leaderboardStartDate" class="text-sm p-1 w-full">
+                            <input type="date" id="leaderboardEndDate" class="text-sm p-1 w-full">
+                            <button id="leaderboardFilterBtn" class="btn btn-primary p-2 text-sm w-full sm:w-auto">Filtra</button>
                          </div>
                     </div>
 
@@ -393,17 +407,32 @@
         </div>
     </div>
 
-    <!-- Modal per Storico ELO Individuale -->
+    <!-- Modal Assistente Pre-Partita -->
+    <div id="preMatchAssistantModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="card w-full max-w-xl transform transition-all text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Benvenuto al Foosball Lab!</h2>
+            <p class="text-gray-600 mb-6">Cosa vuoi fare oggi?</p>
+            <div id="wizardActions" class="space-y-4">
+                <!-- Azioni Dinamiche -->
+            </div>
+            <div class="mt-6 text-sm">
+                <label class="flex items-center justify-center gap-2">
+                    <input type="checkbox" id="hideWizardCheckbox" class="rounded border-gray-300 text-[--primary] focus:ring-[--primary]">
+                    <span>Non mostrare più all'avvio</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Profilo Giocatore -->
     <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
-        <div class="card w-full max-w-4xl transform transition-all" id="historyModalContent">
-            <div class="flex justify-between items-center mb-2">
-                <h2 id="historyModalTitle" class="text-2xl font-semibold text-gray-800"></h2>
-                <div class="flex items-center gap-2">
-                    <button id="closeHistoryModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
-                </div>
+        <div class="card w-full max-w-4xl transform transition-all flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-2 flex-shrink-0">
+                <div id="playerProfileHeader"></div>
+                <button id="closeHistoryModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
             </div>
              <!-- Filtro Data Globale -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200 items-end flex-shrink-0">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Data Inizio</label>
                     <input type="date" id="historyStartDate" class="mt-1">
@@ -415,7 +444,7 @@
                 <button id="historyFilterBtn" class="btn btn-primary h-fit">Applica Filtro</button>
             </div>
             <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-4">
+            <div class="border-b border-gray-200 mb-4 flex-shrink-0">
                 <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
                     <button id="tabStats" class="modal-tab">📊 Statistiche & Sinergie</button>
                     <button id="tabChart" class="modal-tab active">📈 Andamento Grafico</button>
@@ -423,26 +452,28 @@
                 </nav>
             </div>
             
-            <!-- Tab Content -->
-            <div id="tabStatsContent" class="hidden">
-                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-                    <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsMatchesPlayed">-</p><p class="text-sm text-gray-600">Partite Giocate</p></div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-green-600" id="statsWinRate">-</p><p class="text-sm text-gray-600">Vittorie</p></div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsEloChange">-</p><p class="text-sm text-gray-600">Variazione ELO</p></div>
-                    <div class="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-300"><p class="text-2xl font-bold text-yellow-900 truncate" id="statsBestRole">-</p><p class="text-sm text-yellow-800">Ruolo Migliore</p></div>
-                 </div>
-                 <h3 class="text-xl font-semibold text-gray-800 mb-3">Analisi Sinergie Compagni</h3>
-                 <div id="bestTeammatesContainer" class="space-y-3 max-h-[40vh] overflow-y-auto"></div>
-            </div>
-            <div id="tabChartContent">
-                <div class="bg-gray-50 p-4 rounded-lg"><canvas id="eloHistoryChart"></canvas></div>
-            </div>
-            <div id="tabHistoryContent" class="hidden">
-                 <div class="flex justify-end items-center mb-4 gap-2">
-                    <label for="playerMatchSortSelect" class="text-sm font-medium text-gray-700">Ordina per:</label>
-                    <select id="playerMatchSortSelect" class="w-auto text-sm rounded-md border-gray-300 shadow-sm"><option value="date_desc">Data (Più Recente)</option><option value="date_asc">Data (Meno Recente)</option></select>
+            <!-- Tab Content (Scrollable) -->
+            <div class="overflow-y-auto flex-grow">
+                <div id="tabStatsContent" class="hidden">
+                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                        <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsMatchesPlayed">-</p><p class="text-sm text-gray-600">Partite Giocate</p></div>
+                        <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-green-600" id="statsWinRate">-</p><p class="text-sm text-gray-600">Vittorie</p></div>
+                        <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsEloChange">-</p><p class="text-sm text-gray-600">Variazione ELO</p></div>
+                        <div class="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-300"><p class="text-2xl font-bold text-yellow-900 truncate" id="statsBestRole">-</p><p class="text-sm text-yellow-800">Ruolo Migliore</p></div>
+                     </div>
+                     <h3 class="text-xl font-semibold text-gray-800 mb-3">Analisi Sinergie Compagni</h3>
+                     <div id="bestTeammatesContainer" class="space-y-3"></div>
                 </div>
-                <div id="playerMatchHistoryContainer" class="space-y-2 max-h-[50vh] overflow-y-auto"></div>
+                <div id="tabChartContent">
+                    <div class="bg-gray-50 p-4 rounded-lg"><canvas id="eloHistoryChart"></canvas></div>
+                </div>
+                <div id="tabHistoryContent" class="hidden">
+                     <div class="flex justify-end items-center mb-4 gap-2">
+                        <label for="playerMatchSortSelect" class="text-sm font-medium text-gray-700">Ordina per:</label>
+                        <select id="playerMatchSortSelect" class="w-auto text-sm rounded-md border-gray-300 shadow-sm"><option value="date_desc">Data (Più Recente)</option><option value="date_asc">Data (Meno Recente)</option></select>
+                    </div>
+                    <div id="playerMatchHistoryContainer" class="space-y-2"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -551,6 +582,7 @@
             const importBtn = document.getElementById('importBtn');
             const importFileInput = document.getElementById('importFileInput');
             const linkFileBtn = document.getElementById('linkFileBtn');
+            const body = document.body;
             
             const teamASelects = { attack: document.getElementById('teamAPlayerAttack'), defense: document.getElementById('teamAPlayerDefense') };
             const teamBSelects = { attack: document.getElementById('teamBPlayerAttack'), defense: document.getElementById('teamBPlayerDefense') };
@@ -581,7 +613,8 @@
 
             // Modal Storico Individuale
             const historyModal = document.getElementById('historyModal');
-            const historyModalTitle = document.getElementById('historyModalTitle');
+            const historyModalContent = document.getElementById('historyModalContent');
+            const playerProfileHeader = document.getElementById('playerProfileHeader');
             const closeHistoryModalBtn = document.getElementById('closeHistoryModal');
             const historyStartDateInput = document.getElementById('historyStartDate');
             const historyEndDateInput = document.getElementById('historyEndDate');
@@ -635,6 +668,11 @@
             const partnerFinderEndDate = document.getElementById('partnerFinderEndDate');
             const partnerList = document.getElementById('partnerList');
 
+            // Modal Pre-Partita
+            const preMatchAssistantModal = document.getElementById('preMatchAssistantModal');
+            const wizardActions = document.getElementById('wizardActions');
+            const hideWizardCheckbox = document.getElementById('hideWizardCheckbox');
+
             // Altri Modals
             const confirmRecordModal = document.getElementById('confirmRecordModal');
             const recordSummary = document.getElementById('recordSummary');
@@ -676,6 +714,14 @@
                 const sorted = arr.slice().sort((a,b) => a - b);
                 const mid = Math.floor(sorted.length / 2);
                 return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+            };
+            const openModal = (modalElement) => {
+                modalElement.classList.remove('hidden');
+                body.classList.add('modal-open');
+            };
+            const closeModal = (modalElement) => {
+                modalElement.classList.add('hidden');
+                body.classList.remove('modal-open');
             };
 
             // --- Funzioni Principali ---
@@ -724,7 +770,7 @@
                     <p><strong>Squadra B:</strong> ⚔️ ${teamBPlayers.attack.name} & 🛡️ ${teamBPlayers.defense.name}</p>
                     <p><strong>Vincitore:</strong> <span class="font-bold ${winner === 'A' ? 'team-a-color' : 'team-b-color'}">Squadra ${winner}</span></p>
                 `;
-                confirmRecordModal.classList.remove('hidden');
+                openModal(confirmRecordModal);
             }
 
             function recordMatch() {
@@ -743,7 +789,7 @@
 
             function openConfirmationModal(matchId) {
                 matchIdToDelete = matchId;
-                confirmDeleteModal.classList.remove('hidden');
+                openModal(confirmDeleteModal);
             }
 
             function deleteMatch(matchId) {
@@ -949,7 +995,7 @@
                  const currentTab = document.querySelector('.assistant-tab.active').dataset.tab;
                  if(currentTab === 'opponents') showOpponentProposals();
                  else renderPartnerFinder();
-                 teamAssistantModal.classList.remove('hidden');
+                 openModal(teamAssistantModal);
             }
 
             function showOpponentProposals() {
@@ -1090,14 +1136,17 @@
                 const player = getPlayer(playerId);
                 if (!player) return;
                 
-                historyModalTitle.textContent = `Analisi: ${player.name}`;
+                playerProfileHeader.innerHTML = `
+                    <h2 class="text-2xl font-bold text-gray-800">${player.name}</h2>
+                    <p class="text-lg font-semibold" style="color: var(--primary)">ELO: ${Math.round(player.elo)}</p>`;
+
                 const dates = player.history.slice(1).map(h => h.date).sort();
                 historyStartDateInput.value = dates.length ? dates[0] : '';
                 historyEndDateInput.value = dates.length ? dates[dates.length - 1] : '';
                 
                 switchTab('chart');
                 updateAllPlayerData();
-                historyModal.classList.remove('hidden');
+                openModal(historyModal);
             }
 
             function switchTab(tabName) {
@@ -1129,7 +1178,7 @@
                             borderColor: 'var(--accent)', backgroundColor: 'rgba(255, 210, 46, 0.15)',
                             fill: true, tension: 0.1
                         }]
-                    }, options: { responsive: true, scales: {
+                    }, options: { responsive: true, maintainAspectRatio: false, scales: {
                         y: { ticks: { color: 'var(--text-muted)' }, grid: { color: 'rgba(0, 0, 0, 0.05)'}},
                         x: { ticks: { color: 'var(--text-muted)' }, grid: { display: false }}
                     }, plugins: { legend: { display: false } } }
@@ -1298,7 +1347,7 @@
                 comparisonModalTitle.textContent = "Confronto Generale ELO";
                 comparisonModalContent.innerHTML = `<canvas id="eloComparisonChart"></canvas>`;
                 renderComparisonChart('line', sortedDates.map(d => new Date(d).toLocaleDateString('it-IT')), datasets);
-                comparisonModal.classList.remove('hidden');
+                openModal(comparisonModal);
             }
 
             function handleRoleComparison(playerIds, startDate, endDate) {
@@ -1335,7 +1384,7 @@
                         <thead><tr class="border-b"><th class="p-2 text-left">Giocatore</th><th class="p-2">Partite</th><th class="p-2">% Vittorie</th><th class="p-2">ELO Medio/Partita</th></tr></thead>
                         <tbody>${tableRows}</tbody>
                     </table>`;
-                comparisonModal.classList.remove('hidden');
+                openModal(comparisonModal);
             }
 
             function handleSynergyComparison(playerIds, startDate, endDate) {
@@ -1411,7 +1460,7 @@
                         `
                     }).join('');
                 }
-                comparisonModal.classList.remove('hidden');
+                openModal(comparisonModal);
             }
             
             function renderComparisonChart(type, labels, datasets) {
@@ -1434,9 +1483,9 @@
 
                 matchesToDeleteIds = matchesInRange.map(m => m.id);
                 bulkDeleteSummaryText.textContent = `Stai per eliminare ${matchesInRange.length} partite. L'azione è irreversibile.`;
-                confirmBulkDeleteBtn.textContent = `Conferma Eliminazione (${matchesInRange.length} partite)`;
+                confirmBulkDeleteBtn.textContent = `Conferma Eliminazione (${matchesToDeleteIds.length} partite)`;
                 renderMatches(bulkDeleteMatchList, matchesInRange);
-                confirmBulkDeleteModal.classList.remove('hidden');
+                openModal(confirmBulkDeleteModal);
             }
 
             // --- Accordion ---
@@ -1549,6 +1598,87 @@
                 }
             }
 
+            // --- Assistente Pre-Partita ---
+            function showPreMatchAssistant() {
+                if (localStorage.getItem('hideWizard') === 'true' || players.length < 4) {
+                    closeModal(preMatchAssistantModal);
+                    return;
+                }
+                openModal(preMatchAssistantModal);
+
+                wizardActions.innerHTML = ''; // Clear previous actions
+
+                // 1. Rivincita
+                if (matches.length > 0) {
+                    const lastMatch = matches[matches.length - 1];
+                    const teamAPlayers = { attack: getPlayer(lastMatch.teamA.attack), defense: getPlayer(lastMatch.teamA.defense) };
+                    const teamBPlayers = { attack: getPlayer(lastMatch.teamB.attack), defense: getPlayer(lastMatch.teamB.defense) };
+
+                    if(Object.values(teamAPlayers).every(p => p) && Object.values(teamBPlayers).every(p => p)) {
+                        const actionCard = document.createElement('button');
+                        actionCard.className = 'wizard-action-card w-full';
+                        actionCard.innerHTML = `
+                            <p class="font-bold text-lg">🔥 Rivincita?</p>
+                            <p class="text-sm text-gray-600">Ripeti l'ultima partita: ${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} vs ${teamBPlayers.attack.name} & ${teamBPlayers.defense.name}</p>
+                        `;
+                        actionCard.addEventListener('click', () => {
+                            teamASelects.attack.value = lastMatch.teamA.attack;
+                            teamASelects.defense.value = lastMatch.teamA.defense;
+                            teamBSelects.attack.value = lastMatch.teamB.attack;
+                            teamBSelects.defense.value = lastMatch.teamB.defense;
+                            updateTeamEloDisplays();
+                            closePreMatchAssistant();
+                        });
+                        wizardActions.appendChild(actionCard);
+                    }
+                }
+                
+                // 2. Sfida del Giorno
+                if (players.length >= 4) {
+                    const sortedPlayers = [...players].sort((a,b) => b.elo - a.elo);
+                    const p1 = sortedPlayers[0], p2 = sortedPlayers[1], p3 = sortedPlayers[2], p4 = sortedPlayers[3];
+                    
+                    const actionCard = document.createElement('button');
+                    actionCard.className = 'wizard-action-card w-full';
+                    actionCard.innerHTML = `
+                        <p class="font-bold text-lg">🏆 Sfida al Vertice</p>
+                        <p class="text-sm text-gray-600">Partita equilibrata tra i top 4: ${p1.name} & ${p4.name} vs ${p2.name} & ${p3.name}</p>
+                    `;
+                    actionCard.addEventListener('click', () => {
+                        teamASelects.attack.value = p1.id;
+                        teamASelects.defense.value = p4.id;
+                        teamBSelects.attack.value = p2.id;
+                        teamBSelects.defense.value = p3.id;
+                        updateTeamEloDisplays();
+                        closePreMatchAssistant();
+                    });
+                    wizardActions.appendChild(actionCard);
+                }
+
+                // 3. Altre Azioni
+                wizardActions.innerHTML += `
+                    <button id="wizardRegister" class="wizard-action-card w-full">
+                        <p class="font-bold text-lg">✍️ Registra una Partita Manualmente</p>
+                        <p class="text-sm text-gray-600">Scegli tu i giocatori e i ruoli per la prossima sfida.</p>
+                    </button>
+                    <button id="wizardLab" class="wizard-action-card w-full">
+                        <p class="font-bold text-lg">🔬 Vai al Laboratorio</p>
+                        <p class="text-sm text-gray-600">Analizza le classifiche, le sinergie e gli storici.</p>
+                    </button>
+                `;
+
+                document.getElementById('wizardRegister').addEventListener('click', closePreMatchAssistant);
+                document.getElementById('wizardLab').addEventListener('click', closePreMatchAssistant);
+            }
+
+            function closePreMatchAssistant() {
+                if(hideWizardCheckbox.checked) {
+                    localStorage.setItem('hideWizard', 'true');
+                }
+                closeModal(preMatchAssistantModal);
+            }
+
+
             // --- Inizializzazione ---
             function init() {
                 if ('serviceWorker' in navigator) {
@@ -1588,8 +1718,8 @@
                 teamAssistantBtn.addEventListener('click', openTeamAssistantModal);
 
                 // --- Event Listeners per Modals ---
-                closeHistoryModalBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
-                historyModal.addEventListener('click', e => { if(e.target === historyModal) historyModal.classList.add('hidden'); });
+                closeHistoryModalBtn.addEventListener('click', () => closeModal(historyModal));
+                historyModal.addEventListener('click', e => { if(e.target === historyModal) closeModal(historyModal); });
                 historyFilterBtn.addEventListener('click', updateAllPlayerData);
                 Object.values(playerAnalysisTabs).forEach(tab => tab.addEventListener('click', () => switchTab(tab.id.replace('tab', '').toLowerCase())));
                 playerMatchSortSelect.addEventListener('change', renderPlayerMatchHistory);
@@ -1603,7 +1733,7 @@
                     playerListTitle.textContent = comparisonMode === 'synergy' ? "Seleziona Compagni da Confrontare" : "Seleziona Giocatori";
                 }));
                 compareBtn.addEventListener('click', handleComparison);
-                closeComparisonModalBtn.addEventListener('click', () => comparisonModal.classList.add('hidden'));
+                closeComparisonModalBtn.addEventListener('click', () => closeModal(comparisonModal));
                 
                 assistantTabs.forEach(tab => tab.addEventListener('click', (e) => {
                     assistantTabs.forEach(t => t.classList.remove('active'));
@@ -1627,23 +1757,23 @@
                         teamASelects[playerRole].value = playerId;
                         teamASelects[partnerRole].value = partnerId;
                         updateTeamEloDisplays();
-                        teamAssistantModal.classList.add('hidden');
+                        closeModal(teamAssistantModal);
                     }
                 });
 
-                closeTeamAssistantModal.addEventListener('click', () => teamAssistantModal.classList.add('hidden'));
+                closeTeamAssistantModal.addEventListener('click', () => closeModal(teamAssistantModal));
                 assistantOpponentsContent.addEventListener('click', (e) => {
                     const card = e.target.closest('[data-attack-id]');
                     if (card) {
                         teamBSelects.attack.value = card.dataset.attackId;
                         teamBSelects.defense.value = card.dataset.defenseId;
                         updateTeamEloDisplays();
-                        teamAssistantModal.classList.add('hidden');
+                        closeModal(teamAssistantModal);
                     }
                 });
-                cancelRecordBtn.addEventListener('click', () => confirmRecordModal.classList.add('hidden'));
-                confirmRecordBtn.addEventListener('click', () => { recordMatch(); confirmRecordModal.classList.add('hidden'); });
-                cancelDeleteBtn.addEventListener('click', () => confirmDeleteModal.classList.add('hidden'));
+                cancelRecordBtn.addEventListener('click', () => closeModal(confirmRecordModal));
+                confirmRecordBtn.addEventListener('click', () => { recordMatch(); closeModal(confirmRecordModal); });
+                cancelDeleteBtn.addEventListener('click', () => closeModal(confirmDeleteModal));
                 confirmDeleteBtn.addEventListener('click', () => {
                     if (matchIdToDelete) {
                         deleteMatch(matchIdToDelete);
@@ -1651,16 +1781,16 @@
                         saveAndRender();
                         showMessage("Partita eliminata.");
                     }
-                    confirmDeleteModal.classList.add('hidden');
+                    closeModal(confirmDeleteModal);
                     matchIdToDelete = null;
                 });
                 bulkDeleteBtn.addEventListener('click', handleBulkDeletePreview);
-                cancelBulkDeleteBtn.addEventListener('click', () => confirmBulkDeleteModal.classList.add('hidden'));
+                cancelBulkDeleteBtn.addEventListener('click', () => closeModal(confirmBulkDeleteModal));
                 confirmBulkDeleteBtn.addEventListener('click', () => {
                     matches = matches.filter(m => !matchesToDeleteIds.includes(m.id));
                     recalculateAllElos();
                     saveAndRender();
-                    confirmBulkDeleteModal.classList.add('hidden');
+                    closeModal(confirmBulkDeleteModal);
                     showMessage(`${matchesToDeleteIds.length} partite eliminate.`);
                     matchesToDeleteIds = [];
                 });
@@ -1689,6 +1819,8 @@
                 loadFromStorage();
                 recalculateAllElos();
                 render();
+                
+                showPreMatchAssistant();
 
                 const allMatchDates = matches.map(m => m.date).sort();
                 if (allMatchDates.length) {
