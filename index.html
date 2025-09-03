@@ -996,7 +996,6 @@
             function deletePlayer() {
                 if (playerIdToDelete === null) return;
                 players = players.filter(p => p.id !== playerIdToDelete);
-                // Non serve ricalcolare gli ELO se il giocatore non ha mai giocato
                 saveAndRender();
                 closeModal(document.getElementById('confirmPlayerDeleteModal'));
                 showMessage("Giocatore eliminato con successo.");
@@ -1049,7 +1048,7 @@
                 const allMatches = [...matches.map(m => ({...m, isTournament: false}))];
                 tournaments.forEach(t => {
                     t.rounds.flat().forEach(match => {
-                        if (match.winnerTeamId) { // Only count completed matches
+                        if (match.winnerTeamId) {
                             const teamA = t.teams.find(team => team.id === match.teamAId);
                             const teamB = t.teams.find(team => team.id === match.teamBId);
                             if (!teamA || !teamB || !match.teamA_attackId || !match.teamB_attackId) return;
@@ -1068,59 +1067,76 @@
                                 winner: teamA.id === match.winnerTeamId ? 'A' : 'B',
                                 isTournament: true,
                                 tournamentName: t.name,
+                                eloChange: match.eloChange,
+                                teamA_elos: match.teamA_elos,
+                                teamB_elos: match.teamB_elos,
                             });
                         }
                     });
                 });
-                return allMatches.sort((a, b) => new Date(a.date) - new Date(b.date));
+                return allMatches.sort((a, b) => new Date(b.date) - new Date(a.date));
             }
 
             function recalculateAllElos() {
-                const allHistoricalMatches = getAllHistoricalMatches();
+                const allHistoricalMatches = getAllHistoricalMatches().sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 players.forEach(player => {
-                    player.history = [player.history[0]]; // Keep initial ELO
+                    player.history = [player.history[0] || { date: new Date(0).toISOString().split('T')[0], elo: INITIAL_ELO }];
                     player.elo = INITIAL_ELO;
                     player.gamesPlayed = 0;
                 });
                 
-                allHistoricalMatches.forEach(match => {
-                    const affectsElo = !match.isTournament || (tournaments.find(t => t.name === match.tournamentName)?.affectsElo ?? false);
+                allHistoricalMatches.forEach(matchData => {
+                    const affectsElo = !matchData.isTournament || (tournaments.find(t => t.name === matchData.tournamentName)?.affectsElo ?? false);
                     
-                    const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
-                    const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
+                    const teamAPlayers = { attack: getPlayer(matchData.teamA.attack), defense: getPlayer(matchData.teamA.defense) };
+                    const teamBPlayers = { attack: getPlayer(matchData.teamB.attack), defense: getPlayer(matchData.teamB.defense) };
                     
                     if (!teamAPlayers.attack || !teamAPlayers.defense || !teamBPlayers.attack || !teamBPlayers.defense) return;
 
-                    match.teamA_elos = { attack: teamAPlayers.attack.elo, defense: teamAPlayers.defense.elo };
-                    match.teamB_elos = { attack: teamBPlayers.attack.elo, defense: teamBPlayers.defense.elo };
-
+                    const currentTeamAElos = { attack: teamAPlayers.attack.elo, defense: teamAPlayers.defense.elo };
+                    const currentTeamBElos = { attack: teamBPlayers.attack.elo, defense: teamBPlayers.defense.elo };
+                    
+                    let eloChange = 0;
                     if (affectsElo) {
-                        const teamAElo = (teamAPlayers.attack.elo + teamAPlayers.defense.elo) / 2;
-                        const teamBElo = (teamBPlayers.attack.elo + teamBPlayers.defense.elo) / 2;
+                        const teamAElo = (currentTeamAElos.attack + currentTeamAElos.defense) / 2;
+                        const teamBElo = (currentTeamBElos.attack + currentTeamBElos.defense) / 2;
                         const expectedScoreA = 1 / (1 + Math.pow(10, (teamBElo - teamAElo) / 400));
-                        const actualScoreA = (match.winner === 'A') ? 1 : 0;
-                        const eloChange = K_FACTOR * (actualScoreA - expectedScoreA);
-                        
-                        match.eloChange = eloChange;
+                        const actualScoreA = (matchData.winner === 'A') ? 1 : 0;
+                        eloChange = K_FACTOR * (actualScoreA - expectedScoreA);
 
                         Object.values(teamAPlayers).forEach(p => {
                             const newElo = Math.round(p.elo + eloChange);
                             p.elo = newElo;
-                            p.history.push({ date: match.date, elo: newElo });
+                            p.history.push({ date: matchData.date, elo: newElo });
                         });
                         Object.values(teamBPlayers).forEach(p => {
                             const newElo = Math.round(p.elo - eloChange);
                             p.elo = newElo;
-                            p.history.push({ date: match.date, elo: newElo });
+                            p.history.push({ date: matchData.date, elo: newElo });
                         });
-                    } else {
-                        match.eloChange = 0;
                     }
                     
                     [...Object.values(teamAPlayers), ...Object.values(teamBPlayers)].forEach(p => {
                         p.gamesPlayed = (p.gamesPlayed || 0) + 1;
                     });
+                    
+                    let originalMatch;
+                    if (matchData.isTournament) {
+                        const tournamentId = parseInt(matchData.id.split('-')[1]);
+                        const tournament = tournaments.find(t => t.id === tournamentId);
+                        if (tournament) {
+                            originalMatch = tournament.rounds.flat().find(m => `t-${m.id}` === matchData.id);
+                        }
+                    } else {
+                        originalMatch = matches.find(m => m.id === matchData.id);
+                    }
+
+                    if (originalMatch) {
+                        originalMatch.eloChange = eloChange;
+                        originalMatch.teamA_elos = currentTeamAElos;
+                        originalMatch.teamB_elos = currentTeamBElos;
+                    }
                 });
             }
             
@@ -1136,7 +1152,7 @@
                 if (playerData) { // Vista filtrata della classifica
                     unrankedPlayersCard.style.display = 'none';
                     const sourcePlayers = playerData;
-                    sourcePlayers.sort((a, b) => b.elo - a.elo); // Ordina sempre per ELO in vista filtrata
+                    sourcePlayers.sort((a, b) => b.elo - a.elo);
                     
                     leaderboard.innerHTML = sourcePlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Nessun giocatore trovato nel periodo.</p>`;
                     sourcePlayers.forEach((player, index) => {
@@ -1151,16 +1167,13 @@
                          playerRow.addEventListener('click', () => openHistoryModal(player.id));
                          leaderboard.appendChild(playerRow);
                     });
-                    return; // Termina qui per la vista filtrata
+                    return;
                 }
 
-                // Vista principale
                 unrankedPlayersCard.style.display = 'block';
-
                 const rankedPlayers = players.filter(p => p.gamesPlayed > 0);
                 const unrankedPlayers = players.filter(p => p.gamesPlayed === 0);
                 
-                // Render Classifica Principale (ranked)
                 rankedPlayers.sort((a, b) => {
                     if (leaderboardSort.by === 'elo') return leaderboardSort.order === 'desc' ? b.elo - a.elo : a.elo - b.elo;
                     return leaderboardSort.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
@@ -1190,7 +1203,6 @@
                     leaderboard.appendChild(playerRow);
                 });
                 
-                // Render Giocatori non Classificati
                 unrankedPlayers.sort((a, b) => a.name.localeCompare(b.name));
                 unrankedPlayersContainer.innerHTML = unrankedPlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Tutti i giocatori sono classificati.</p>`;
                 unrankedPlayers.forEach(player => {
@@ -1206,7 +1218,6 @@
                      unrankedPlayersContainer.appendChild(playerRow);
                 });
                 
-                // Aggiorna select in ogni caso (se non è una vista filtrata)
                 allSelects.forEach(select => {
                     const currentValue = select.value;
                     select.innerHTML = '<option value="">Seleziona...</option>';
@@ -1235,8 +1246,8 @@
             function renderMatches() {
                 const startDate = matchHistoryStartDate.value;
                 const endDate = matchHistoryEndDate.value;
-                const allHistoricalMatches = getAllHistoricalMatches();
-
+                let allHistoricalMatches = getAllHistoricalMatches();
+                
                 let filteredMatches = allHistoricalMatches;
                 if(startDate && endDate) {
                     filteredMatches = allHistoricalMatches.filter(m => m.date >= startDate && m.date <= endDate);
@@ -1246,9 +1257,8 @@
                     const [sortBy, sortOrder] = matchHistorySort.split('_');
                     if (sortBy === 'date') return sortOrder === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date);
                     if (sortBy === 'elo') {
-                        if (!a.teamA_elos || !b.teamA_elos) return 0;
-                        const avgEloA = (a.teamA_elos.attack + a.teamA_elos.defense + a.teamB_elos.attack + a.teamB_elos.defense) / 4;
-                        const avgEloB = (b.teamA_elos.attack + b.teamA_elos.defense + b.teamB_elos.attack + b.teamB_elos.defense) / 4;
+                        const avgEloA = (a.teamA_elos?.attack + a.teamA_elos?.defense + a.teamB_elos?.attack + a.teamB_elos?.defense) / 4 || 0;
+                        const avgEloB = (b.teamA_elos?.attack + b.teamA_elos?.defense + b.teamB_elos?.attack + b.teamB_elos?.defense) / 4 || 0;
                         return sortOrder === 'desc' ? avgEloB - avgEloA : avgEloA - avgEloB;
                     }
                     return 0;
@@ -1262,10 +1272,10 @@
                     if (!teamAPlayers.attack || !teamBPlayers.attack) return;
                     
                     const isEloActive = !match.isTournament || (tournaments.find(t => t.name === match.tournamentName)?.affectsElo ?? false);
-                    const eloChangeStringA = isEloActive ? (match.winner === 'A' ? `+${Math.round(match.eloChange)}` : `${Math.round(match.eloChange)}`) : 'N/A';
-                    const eloChangeStringB = isEloActive ? (match.winner === 'B' ? `+${Math.round(-match.eloChange)}` : `${Math.round(-match.eloChange)}`) : 'N/A';
-                    const eloChangeClassA = isEloActive ? (eloChangeStringA.startsWith('+') ? 'text-green-600' : 'text-red-600') : 'text-gray-400';
-                    const eloChangeClassB = isEloActive ? (eloChangeStringB.startsWith('+') ? 'text-green-600' : 'text-red-600') : 'text-gray-400';
+                    const eloChangeStringA = (isEloActive && match.eloChange != null) ? (match.winner === 'A' ? `+${Math.round(match.eloChange)}` : `${Math.round(match.eloChange)}`) : 'N/A';
+                    const eloChangeStringB = (isEloActive && match.eloChange != null) ? (match.winner === 'B' ? `+${Math.round(-match.eloChange)}` : `${Math.round(-match.eloChange)}`) : 'N/A';
+                    const eloChangeClassA = (isEloActive && match.eloChange != null) ? (eloChangeStringA.startsWith('+') ? 'text-green-600' : 'text-red-600') : 'text-gray-400';
+                    const eloChangeClassB = (isEloActive && match.eloChange != null) ? (eloChangeStringB.startsWith('+') ? 'text-green-600' : 'text-red-600') : 'text-gray-400';
                     const matchIcon = match.isTournament ? '🏆' : '🤝';
                     const matchTitle = match.isTournament ? match.tournamentName : 'Partita Amichevole';
 
