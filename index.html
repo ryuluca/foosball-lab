@@ -14,9 +14,9 @@
     <link rel="manifest" href="manifest.json">
 
     <!-- Icons for Home Screen -->
-    <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/180/148cb4/foosball.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://img.icons8.com/ios-filled/32/148cb4/foosball.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://img.icons8.com/ios-filled/16/148cb4/foosball.png">
+    <link rel="apple-touch-icon" href="foosball_16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="foosball_16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="foosball_16.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -187,9 +187,14 @@
 
                         <!-- Squadra Blu -->
                         <div>
-                            <div class="flex justify-between items-baseline">
-                                <h3 class="font-bold team-blue-color mb-2 text-lg">Squadra Blu</h3>
-                                <span class="text-sm font-bold team-blue-color" id="teamAEloDisplay">ELO: -</span>
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold team-blue-color text-lg">Squadra Blu</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold team-blue-color" id="teamAEloDisplay">ELO: -</span>
+                                    <button id="invertRolesABtn" title="Inverti Ruoli" class="p-1 rounded-full hover:bg-gray-200">
+                                        <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
@@ -203,11 +208,23 @@
                             </div>
                         </div>
 
+                        <div class="text-center my-2">
+                            <button id="invertTeamsBtn" title="Inverti Squadre" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-transform duration-300 hover:rotate-180">
+                                <svg class="w-5 h-5 text-gray-700"  fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 12l-4-4m4 4l4-4m6 8v-12m0 12l4-4m-4 4l-4-4"/></svg>
+                            </button>
+                        </div>
+
+
                         <!-- Squadra Rossa -->
                         <div>
-                             <div class="flex justify-between items-baseline">
-                                <h3 class="font-bold team-red-color mb-2 text-lg">Squadra Rossa</h3>
-                                <span class="text-sm font-bold team-red-color" id="teamBEloDisplay">ELO: -</span>
+                             <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold team-red-color text-lg">Squadra Rossa</h3>
+                                 <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold team-red-color" id="teamBEloDisplay">ELO: -</span>
+                                    <button id="invertRolesBBtn" title="Inverti Ruoli" class="p-1 rounded-full hover:bg-gray-200">
+                                        <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
