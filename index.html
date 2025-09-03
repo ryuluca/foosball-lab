@@ -91,7 +91,7 @@
          .btn-danger:hover {
             background-color: var(--team-red-dark);
         }
-        select, input[type="text"], input[type="date"] {
+        select, input[type="text"], input[type="date"], input[type="number"] {
             background-color: #fff;
             border: 1px solid var(--border-color);
             color: var(--text-neutral);
@@ -99,7 +99,7 @@
             padding: 0.5rem 0.75rem;
             width: 100%;
         }
-        select:focus, input[type="text"]:focus, input[type="date"]:focus {
+        select:focus, input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(255, 210, 46, 0.25);
@@ -150,6 +150,16 @@
         body.modal-open {
             overflow: hidden;
         }
+        /* Tournament Bracket Styles */
+        .tournament-bracket { display: flex; overflow-x: auto; padding: 20px; }
+        .round { display: flex; flex-direction: column; justify-content: space-around; flex: 1; }
+        .match { display: flex; flex-direction: column; justify-content: center; position: relative; margin: 20px 0; }
+        .team { padding: 8px; border: 1px solid var(--border-color); background-color: #fff; border-radius: 4px; margin-bottom: 8px; cursor: pointer; }
+        .team.winner { font-weight: bold; background-color: var(--accent); }
+        .team:not(.winner):not(.tbd):hover { background-color: #f0f0f0; }
+        .team.tbd { color: var(--text-muted); font-style: italic; }
+        .match-connector { position: absolute; left: 100%; top: 50%; width: 20px; height: 2px; background-color: var(--border-color); }
+        .round-connector { position: absolute; left: 100%; top: 25%; width: 2px; height: 50%; background-color: var(--border-color); transform: translateY(50%); }
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -260,33 +270,6 @@
                 </div>
                  <!-- Area Messaggi -->
                 <div id="messageArea" class="hidden p-4 rounded-lg text-center font-semibold text-white"></div>
-                 <!-- Gestione Dati -->
-                <div class="card">
-                    <button class="accordion-header flex justify-between items-center w-full">
-                        <h2 class="text-2xl font-semibold text-gray-800">Gestione Dati</h2>
-                        <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div class="accordion-content hidden pt-4">
-                        <div class="space-y-4">
-                            <button id="linkFileBtn" class="btn w-full" style="background-color: var(--team-blue); color: white;">Collega/Crea dati.json</button>
-                             <p class="text-xs text-center text-gray-500">Salva i dati in un file locale per la massima persistenza e condivisione.</p>
-                             <div class="border-t pt-4 mt-4">
-                                 <h3 class="font-semibold text-gray-700 mb-2 text-lg">Backup / Ripristino</h3>
-                                <button id="exportBtn" class="btn w-full" style="background-color: var(--text-muted); color: white;">Esporta Backup (JSON)</button>
-                                <button id="importBtn" class="btn w-full mt-2" style="background-color: var(--text-muted); color: white;">Importa Backup (JSON)</button>
-                                <input type="file" id="importFileInput" accept=".json" class="hidden">
-                             </div>
-                            <div class="border-t pt-4 mt-4">
-                                 <h3 class="font-semibold text-gray-700 mb-2 text-lg">Eliminazione Multipla</h3>
-                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                     <input type="date" id="bulkDeleteStartDate" title="Data di inizio per eliminazione">
-                                     <input type="date" id="bulkDeleteEndDate" title="Data di fine per eliminazione">
-                                 </div>
-                                 <button id="bulkDeleteBtn" class="btn btn-danger w-full mt-2">Elimina Partite nel Periodo...</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Colonna Classifica e Confronto -->
@@ -417,6 +400,55 @@
             </div>
         </div>
 
+        <!-- Gestione Tornei -->
+        <div class="card mt-8 lg:col-span-3">
+            <button class="accordion-header flex justify-between items-center w-full">
+                <h2 class="text-2xl font-semibold text-gray-800">Gestione Tornei</h2>
+                <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="accordion-content hidden pt-4">
+                <button id="createNewTournamentBtn" class="btn btn-primary w-full mb-6">🏆 Crea Nuovo Torneo</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2">In Corso</h3>
+                        <div id="inProgressTournaments" class="space-y-4"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2">Completati</h3>
+                        <div id="completedTournaments" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestione Dati -->
+        <div class="card mt-8 lg:col-span-3">
+            <button class="accordion-header flex justify-between items-center w-full">
+                <h2 class="text-2xl font-semibold text-gray-800">Gestione Dati</h2>
+                <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="accordion-content hidden pt-4">
+                <div class="space-y-4">
+                    <button id="linkFileBtn" class="btn w-full" style="background-color: var(--team-blue); color: white;">Collega/Crea dati.json</button>
+                     <p class="text-xs text-center text-gray-500">Salva i dati in un file locale per la massima persistenza e condivisione.</p>
+                     <div class="border-t pt-4 mt-4">
+                         <h3 class="font-semibold text-gray-700 mb-2 text-lg">Backup / Ripristino</h3>
+                        <button id="exportBtn" class="btn w-full" style="background-color: var(--text-muted); color: white;">Esporta Backup (JSON)</button>
+                        <button id="importBtn" class="btn w-full mt-2" style="background-color: var(--text-muted); color: white;">Importa Backup (JSON)</button>
+                        <input type="file" id="importFileInput" accept=".json" class="hidden">
+                     </div>
+                    <div class="border-t pt-4 mt-4">
+                         <h3 class="font-semibold text-gray-700 mb-2 text-lg">Eliminazione Multipla</h3>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                             <input type="date" id="bulkDeleteStartDate" title="Data di inizio per eliminazione">
+                             <input type="date" id="bulkDeleteEndDate" title="Data di fine per eliminazione">
+                         </div>
+                         <button id="bulkDeleteBtn" class="btn btn-danger w-full mt-2">Elimina Partite nel Periodo...</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Sezione Spiegazione Calcolo ELO -->
         <div class="card mt-8 lg:col-span-3">
             <button class="accordion-header flex justify-between items-center w-full">
@@ -476,10 +508,11 @@
             </div>
             <!-- Tabs -->
             <div class="border-b border-gray-200 mb-4 flex-shrink-0">
-                <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                <nav class="flex space-x-2 -mb-px overflow-x-auto" aria-label="Tabs">
                     <button id="tabStats" class="modal-tab">📊 Statistiche & Sinergie</button>
                     <button id="tabChart" class="modal-tab active">📈 Andamento Grafico</button>
                     <button id="tabHistory" class="modal-tab">📜 Storico Partite</button>
+                    <button id="tabTournaments" class="modal-tab">🏆 Tornei</button>
                 </nav>
             </div>
             
@@ -504,6 +537,9 @@
                         <select id="playerMatchSortSelect" class="w-auto text-sm rounded-md border-gray-300 shadow-sm"><option value="date_desc">Data (Più Recente)</option><option value="date_asc">Data (Meno Recente)</option></select>
                     </div>
                     <div id="playerMatchHistoryContainer" class="space-y-2"></div>
+                </div>
+                 <div id="tabTournamentsContent" class="hidden">
+                    <div id="playerTournamentsContainer" class="space-y-4"></div>
                 </div>
             </div>
         </div>
@@ -610,6 +646,81 @@
         </div>
     </div>
 
+    <!-- Modal Creazione Torneo -->
+    <div id="tournamentCreationModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-2xl transform transition-all flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 class="text-2xl font-bold text-gray-800">Crea Nuovo Torneo</h2>
+                <button id="closeTournamentCreationModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
+            </div>
+            <div class="overflow-y-auto flex-grow">
+                <!-- Step 1: Info Base -->
+                <div id="tourneyStep1">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="font-bold text-gray-600">Nome Torneo</label>
+                            <input type="text" id="tournamentNameInput" placeholder="Es. Torneo Estivo 2025">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                <label class="font-bold text-gray-600">Numero Squadre</label>
+                                <select id="tournamentTeamsNumber">
+                                    <option value="4">4 squadre (8 giocatori)</option>
+                                    <option value="8" selected>8 squadre (16 giocatori)</option>
+                                    <option value="16">16 squadre (32 giocatori)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-bold text-gray-600">Data Inizio</label>
+                                <input type="date" id="tournamentDateInput">
+                            </div>
+                        </div>
+                        <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                             <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="tournamentAffectsElo" class="rounded border-gray-300 text-[--team-blue] focus:ring-[--team-blue] h-5 w-5">
+                                <span class="font-semibold text-yellow-900">Le partite di questo torneo influenzeranno la classifica ELO.</span>
+                            </label>
+                        </div>
+                    </div>
+                     <button id="tourneyNextToStep2" class="btn btn-primary w-full mt-6">Prossimo: Seleziona Giocatori</button>
+                </div>
+                <!-- Step 2: Seleziona Giocatori -->
+                <div id="tourneyStep2" class="hidden">
+                    <h3 class="font-bold text-lg mb-2">Seleziona Giocatori Partecipanti</h3>
+                    <p class="text-sm text-gray-500 mb-4">Devi selezionare <span id="requiredPlayerCount" class="font-bold"></span> giocatori.</p>
+                    <div id="tournamentPlayerSelection" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 border rounded-lg"></div>
+                    <div class="flex justify-between mt-6 gap-4">
+                         <button id="tourneyBackToStep1" class="btn" style="background-color: var(--text-muted); color:white;">Indietro</button>
+                         <button id="tourneyNextToStep3" class="btn btn-primary flex-grow" disabled>Prossimo: Crea Squadre</button>
+                    </div>
+                </div>
+                <!-- Step 3: Crea Squadre -->
+                <div id="tourneyStep3" class="hidden">
+                     <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-tab="balanced" class="assistant-tab modal-tab active">Crea Squadre Bilanciate</button>
+                            <button data-tab="manual" class="assistant-tab modal-tab">Crea Squadre Manualmente</button>
+                        </nav>
+                    </div>
+                    <div id="tourneyBalancedTeams" class="space-y-3"></div>
+                    <div id="tourneyManualTeams" class="hidden space-y-3 max-h-60 overflow-y-auto pr-2"></div>
+
+                     <div class="flex justify-between mt-6 gap-4">
+                         <button id="tourneyBackToStep2" class="btn" style="background-color: var(--text-muted); color:white;">Indietro</button>
+                         <button id="createTournamentBtn" class="btn btn-primary flex-grow">Crea Torneo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <!-- Modal Vista Torneo -->
+    <div id="tournamentViewModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-6xl transform transition-all flex flex-col max-h-[90vh]">
+            <div id="tournamentViewHeader" class="flex justify-between items-start mb-4 flex-shrink-0"></div>
+            <div id="tournamentBracketContainer" class="overflow-x-auto flex-grow bg-gray-50 p-4 rounded-lg"></div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -670,13 +781,16 @@
                 stats: document.getElementById('tabStats'),
                 chart: document.getElementById('tabChart'),
                 history: document.getElementById('tabHistory'),
+                tournaments: document.getElementById('tabTournaments'),
             };
             const playerAnalysisContents = {
                 stats: document.getElementById('tabStatsContent'),
                 chart: document.getElementById('tabChartContent'),
                 history: document.getElementById('tabHistoryContent'),
+                tournaments: document.getElementById('tabTournamentsContent'),
             };
             const playerMatchHistoryContainer = document.getElementById('playerMatchHistoryContainer');
+            const playerTournamentsContainer = document.getElementById('playerTournamentsContainer');
             const playerMatchSortSelect = document.getElementById('playerMatchSortSelect');
             const statsMatchesPlayed = document.getElementById('statsMatchesPlayed');
             const statsWinRate = document.getElementById('statsWinRate');
@@ -720,6 +834,32 @@
             const wizardActions = document.getElementById('wizardActions');
             const hideWizardCheckbox = document.getElementById('hideWizardCheckbox');
 
+            // Sezione Tornei
+            const createNewTournamentBtn = document.getElementById('createNewTournamentBtn');
+            const inProgressTournaments = document.getElementById('inProgressTournaments');
+            const completedTournaments = document.getElementById('completedTournaments');
+            const tournamentCreationModal = document.getElementById('tournamentCreationModal');
+            const closeTournamentCreationModal = document.getElementById('closeTournamentCreationModal');
+            const tournamentNameInput = document.getElementById('tournamentNameInput');
+            const tournamentTeamsNumber = document.getElementById('tournamentTeamsNumber');
+            const tournamentDateInput = document.getElementById('tournamentDateInput');
+            const tournamentAffectsElo = document.getElementById('tournamentAffectsElo');
+            const tournamentPlayerSelection = document.getElementById('tournamentPlayerSelection');
+            const tourneyStep1 = document.getElementById('tourneyStep1');
+            const tourneyStep2 = document.getElementById('tourneyStep2');
+            const tourneyStep3 = document.getElementById('tourneyStep3');
+            const tourneyNextToStep2 = document.getElementById('tourneyNextToStep2');
+            const tourneyBackToStep1 = document.getElementById('tourneyBackToStep1');
+            const tourneyNextToStep3 = document.getElementById('tourneyNextToStep3');
+            const tourneyBackToStep2 = document.getElementById('tourneyBackToStep2');
+            const tourneyBalancedTeams = document.getElementById('tourneyBalancedTeams');
+            const tourneyManualTeams = document.getElementById('tourneyManualTeams');
+            const createTournamentBtn = document.getElementById('createTournamentBtn');
+            const tournamentViewModal = document.getElementById('tournamentViewModal');
+            const tournamentViewHeader = document.getElementById('tournamentViewHeader');
+            const tournamentBracketContainer = document.getElementById('tournamentBracketContainer');
+
+
             // Altri Modals
             const confirmRecordModal = document.getElementById('confirmRecordModal');
             const recordSummary = document.getElementById('recordSummary');
@@ -743,6 +883,7 @@
             // --- Stato dell'applicazione ---
             let players = [];
             let matches = [];
+            let tournaments = [];
             let singleHistoryChart = null;
             let comparisonChart = null;
             let currentlyViewingPlayerId = null;
@@ -756,6 +897,7 @@
             const K_FACTOR = 32;
             const INITIAL_ELO = 1500;
             const CHART_COLORS = ['#148cb4', '#dc3545', '#28a745', '#6f42c1', '#fd7e14', '#20c997', '#ffc107', '#6610f2'];
+            let tourneyCreationState = {};
 
             // --- Helper Functions ---
             const getPlayer = (id) => players.find(p => p.id === id);
@@ -869,13 +1011,39 @@
 
             function recalculateAllElos() {
                 matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Reset players and add games from tournaments affecting ELO
                 players.forEach(player => {
                     player.history = [player.history[0]];
                     player.elo = INITIAL_ELO;
                     player.gamesPlayed = 0;
                 });
+                
+                const allMatches = [...matches];
+                tournaments.forEach(t => {
+                    if (t.affectsElo) {
+                        t.rounds.flat().forEach(match => {
+                            if (match.winnerTeamId) { // Only count completed matches
+                                const teamA = t.teams.find(team => team.id === match.teamAId);
+                                const teamB = t.teams.find(team => team.id === match.teamBId);
+                                if (!teamA || !teamB) return;
 
-                matches.forEach(match => {
+                                allMatches.push({
+                                    id: `t-${match.id}`,
+                                    date: t.date, // Use tournament date for simplicity
+                                    teamA: { attack: teamA.player1Id, defense: teamA.player2Id },
+                                    teamB: { attack: teamB.player1Id, defense: teamB.player2Id },
+                                    winner: teamA.id === match.winnerTeamId ? 'A' : 'B'
+                                });
+                            }
+                        });
+                    }
+                });
+
+                allMatches.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+                allMatches.forEach(match => {
                     const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
                     const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
                     
@@ -911,6 +1079,7 @@
             function render() {
                 renderPlayers();
                 renderMatches();
+                renderTournaments();
                 renderComparisonSelectors();
             }
 
@@ -1295,6 +1464,7 @@
                 renderSingleHistoryChart();
                 renderPlayerMatchHistory();
                 renderPlayerStats();
+                renderPlayerTournaments();
             }
 
             function renderSingleHistoryChart() {
@@ -1446,6 +1616,55 @@
                         </div>`;
                     playerMatchHistoryContainer.appendChild(matchDiv);
                 });
+            }
+
+            function renderPlayerTournaments() {
+                 const player = getPlayer(currentlyViewingPlayerId);
+                 const playerTournaments = tournaments.filter(t => t.teams.some(team => team.player1Id === player.id || team.player2Id === player.id));
+
+                 playerTournamentsContainer.innerHTML = playerTournaments.length ? '' : `<p class="text-center text-gray-500 py-4">Nessun torneo disputato.</p>`;
+                 playerTournaments.forEach(t => {
+                     const playerTeam = t.teams.find(team => team.player1Id === player.id || team.player2Id === player.id);
+                     const partner = getPlayer(playerTeam.player1Id === player.id ? playerTeam.player2Id : playerTeam.player1Id);
+                     
+                     let placement = "In Corso";
+                     if(t.status === 'completed') {
+                         if (t.winnerTeamId === playerTeam.id) {
+                            placement = "🏆 Vincitore";
+                         } else {
+                            // Find which round the player was eliminated in
+                            let roundLost = -1;
+                             for(let i = 0; i < t.rounds.length; i++) {
+                                 const match = t.rounds[i].find(m => m.teamAId === playerTeam.id || m.teamBId === playerTeam.id);
+                                 if (match && match.winnerTeamId && match.winnerTeamId !== playerTeam.id) {
+                                     roundLost = i;
+                                     break;
+                                 }
+                             }
+                             if(roundLost === 0) placement = `Eliminato al 1° Turno`;
+                             else if(roundLost === 1 && t.teams.length > 4) placement = `Eliminato ai Quarti`;
+                             else if((roundLost === 2 && t.teams.length > 8) || (roundLost === 1 && t.teams.length <= 4)) placement = `Eliminato in Semifinale`;
+                             else if (roundLost !== -1) placement = `Finalista`;
+                         }
+                     }
+
+                     const card = document.createElement('div');
+                     card.className = "p-4 bg-gray-50 rounded-lg border cursor-pointer hover:border-blue-400";
+                     card.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-800">${t.name}</h4>
+                                <p class="text-sm text-gray-600">In squadra con: <span class="font-semibold">${partner.name}</span></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-lg ${placement === '🏆 Vincitore' ? 'text-yellow-500' : 'text-gray-700'}">${placement}</p>
+                                <p class="text-sm text-gray-500">${new Date(t.date).toLocaleDateString('it-IT')}</p>
+                            </div>
+                        </div>
+                     `;
+                     card.addEventListener('click', () => openTournamentViewModal(t.id));
+                     playerTournamentsContainer.appendChild(card);
+                 })
             }
 
             function handleComparison() {
@@ -1670,7 +1889,7 @@
                 if (!fileHandle) return;
                 try {
                     const writable = await fileHandle.createWritable();
-                    await writable.write(JSON.stringify({ players, matches }));
+                    await writable.write(JSON.stringify({ players, matches, tournaments }));
                     await writable.close();
                 } catch (err) {
                     console.error("Errore salvataggio su file:", err);
@@ -1688,14 +1907,15 @@
                         m.teamB = { attack: m.teamB[0], defense: m.teamB[1] };
                     }
                 });
-                players = data.players;
-                matches = data.matches;
+                players = data.players || [];
+                matches = data.matches || [];
+                tournaments = data.tournaments || [];
                 recalculateAllElos();
                 saveAndRender();
             }
 
             function exportData() {
-                const dataString = JSON.stringify({ players, matches });
+                const dataString = JSON.stringify({ players, matches, tournaments });
                 const blob = new Blob([dataString], { type: 'application/json' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
@@ -1720,7 +1940,7 @@
             }
             
             async function saveAndRender() {
-                localStorage.setItem('foosballEloTracker', JSON.stringify({ players, matches }));
+                localStorage.setItem('foosballEloTracker', JSON.stringify({ players, matches, tournaments }));
                 await saveToFile();
                 render();
             }
@@ -1817,6 +2037,317 @@
                     localStorage.setItem('hideWizard', 'true');
                 }
                 closeModal(preMatchAssistantModal);
+            }
+
+            // --- Logica Tornei ---
+            
+            function openTournamentCreationModal() {
+                tourneyCreationState = {
+                    name: '',
+                    date: new Date().toISOString().split('T')[0],
+                    teamsCount: 8,
+                    affectsElo: false,
+                    selectedPlayers: [],
+                    teams: [],
+                    teamCreationMode: 'balanced'
+                };
+                tournamentDateInput.value = tourneyCreationState.date;
+                // Reset to step 1
+                tourneyStep1.classList.remove('hidden');
+                tourneyStep2.classList.add('hidden');
+                tourneyStep3.classList.add('hidden');
+                openModal(tournamentCreationModal);
+            }
+            
+            function setupTournamentCreationWizard() {
+                // Step 1 -> Step 2
+                tourneyNextToStep2.addEventListener('click', () => {
+                    tourneyCreationState.name = tournamentNameInput.value.trim();
+                    tourneyCreationState.date = tournamentDateInput.value;
+                    tourneyCreationState.teamsCount = parseInt(tournamentTeamsNumber.value);
+                    tourneyCreationState.affectsElo = tournamentAffectsElo.checked;
+
+                    if (!tourneyCreationState.name || !tourneyCreationState.date) {
+                        return showMessage("Per favore, compila nome e data del torneo.", true);
+                    }
+                    
+                    const requiredPlayers = tourneyCreationState.teamsCount * 2;
+                    document.getElementById('requiredPlayerCount').textContent = requiredPlayers;
+                    
+                    renderTournamentPlayerSelection();
+
+                    tourneyStep1.classList.add('hidden');
+                    tourneyStep2.classList.remove('hidden');
+                });
+
+                // Step 2 -> Step 1
+                 tourneyBackToStep1.addEventListener('click', () => {
+                    tourneyStep2.classList.add('hidden');
+                    tourneyStep1.classList.remove('hidden');
+                });
+
+                // Step 2 -> Step 3
+                tourneyNextToStep3.addEventListener('click', () => {
+                    tourneyCreationState.selectedPlayers = Array.from(tournamentPlayerSelection.querySelectorAll('input:checked')).map(cb => parseInt(cb.value));
+                    renderTeamCreationStep();
+                    tourneyStep2.classList.add('hidden');
+                    tourneyStep3.classList.remove('hidden');
+                });
+                
+                // Step 3 -> Step 2
+                tourneyBackToStep2.addEventListener('click', () => {
+                    tourneyStep3.classList.add('hidden');
+                    tourneyStep2.classList.remove('hidden');
+                });
+
+                 createTournamentBtn.addEventListener('click', createTournament);
+            }
+
+            function renderTournamentPlayerSelection() {
+                tournamentPlayerSelection.innerHTML = '';
+                const sortedPlayers = [...players].sort((a,b) => a.name.localeCompare(b.name));
+                sortedPlayers.forEach(player => {
+                    tournamentPlayerSelection.innerHTML += `
+                    <label class="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-gray-100">
+                        <input type="checkbox" value="${player.id}" name="tourneyPlayer" class="rounded border-gray-300 text-[--team-blue] focus:ring-[--team-blue]">
+                        <span>${player.name} (${Math.round(player.elo)})</span>
+                    </label>`;
+                });
+                
+                // Add event listener to enable/disable next button
+                tournamentPlayerSelection.addEventListener('change', () => {
+                    const selectedCount = tournamentPlayerSelection.querySelectorAll('input:checked').length;
+                    const requiredCount = tourneyCreationState.teamsCount * 2;
+                    document.getElementById('requiredPlayerCount').textContent = `${requiredCount} (selezionati: ${selectedCount})`;
+                    tourneyNextToStep3.disabled = selectedCount !== requiredCount;
+                });
+            }
+
+            function renderTeamCreationStep() {
+                const teamCreationTabs = tourneyStep3.querySelectorAll('.assistant-tab');
+                teamCreationTabs.forEach(tab => tab.addEventListener('click', (e) => {
+                    teamCreationTabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    tourneyCreationState.teamCreationMode = e.target.dataset.tab;
+                    tourneyBalancedTeams.classList.toggle('hidden', tourneyCreationState.teamCreationMode !== 'balanced');
+                    tourneyManualTeams.classList.toggle('hidden', tourneyCreationState.teamCreationMode !== 'manual');
+                }));
+                
+                // Generate and render balanced teams by default
+                const selected = getPlayers(tourneyCreationState.selectedPlayers);
+                selected.sort((a,b) => b.elo - a.elo);
+                const teams = [];
+                for(let i = 0; i < tourneyCreationState.teamsCount; i++) {
+                    const p1 = selected[i];
+                    const p2 = selected[selected.length - 1 - i];
+                    teams.push({ id: i + 1, name: `Squadra ${i+1}`, player1Id: p1.id, player2Id: p2.id });
+                }
+                tourneyCreationState.teams = teams;
+
+                tourneyBalancedTeams.innerHTML = '<p class="font-semibold text-gray-700 mb-2">Queste sono le squadre bilanciate proposte in base all\'ELO:</p>';
+                teams.forEach(team => {
+                    const p1 = getPlayer(team.player1Id);
+                    const p2 = getPlayer(team.player2Id);
+                    tourneyBalancedTeams.innerHTML += `
+                    <div class="p-2 bg-gray-50 rounded flex justify-between items-center">
+                        <span class="font-bold">${team.name}</span>
+                        <span>${p1.name} & ${p2.name}</span>
+                        <span class="text-sm font-semibold text-gray-600">ELO Medio: ${Math.round((p1.elo + p2.elo) / 2)}</span>
+                    </div>`;
+                });
+                
+                // Prepare manual creation view
+                let manualHTML = '';
+                const playerOptions = tourneyCreationState.selectedPlayers.map(id => {
+                    const p = getPlayer(id);
+                    return `<option value="${p.id}">${p.name}</option>`;
+                }).join('');
+
+                for(let i=0; i < tourneyCreationState.teamsCount; i++) {
+                     manualHTML += `
+                     <div class="grid grid-cols-3 gap-2 items-center">
+                         <span class="font-bold">Squadra ${i+1}</span>
+                         <select data-team-idx="${i}" data-player-idx="0">${playerOptions}</select>
+                         <select data-team-idx="${i}" data-player-idx="1">${playerOptions}</select>
+                     </div>
+                     `;
+                }
+                tourneyManualTeams.innerHTML = manualHTML;
+            }
+            
+            function createTournament() {
+                 if (tourneyCreationState.teamCreationMode === 'manual') {
+                     // TODO: Logic to build teams from manual selectors, including validation
+                     showMessage("La creazione manuale non è ancora implementata.", true);
+                     return;
+                 }
+                 
+                 const newTournament = {
+                    id: Date.now(),
+                    name: tourneyCreationState.name,
+                    date: tourneyCreationState.date,
+                    status: 'inprogress',
+                    affectsElo: tourneyCreationState.affectsElo,
+                    teams: tourneyCreationState.teams,
+                    winnerTeamId: null,
+                    rounds: []
+                 };
+                 
+                 // Create first round
+                 const firstRound = [];
+                 const shuffledTeams = [...newTournament.teams].sort(() => 0.5 - Math.random()); // Simple shuffle
+                 for (let i = 0; i < shuffledTeams.length; i += 2) {
+                    firstRound.push({
+                        id: `m-${newTournament.id}-0-${i/2}`,
+                        teamAId: shuffledTeams[i].id,
+                        teamBId: shuffledTeams[i+1].id,
+                        winnerTeamId: null
+                    });
+                 }
+                 newTournament.rounds.push(firstRound);
+
+                 tournaments.push(newTournament);
+                 closeModal(tournamentCreationModal);
+                 showMessage(`Torneo "${newTournament.name}" creato con successo!`);
+                 saveAndRender();
+            }
+
+            function renderTournaments() {
+                 inProgressTournaments.innerHTML = '';
+                 completedTournaments.innerHTML = '';
+                 
+                 const inProgress = tournaments.filter(t => t.status === 'inprogress').sort((a,b) => new Date(b.date) - new Date(a.date));
+                 const completed = tournaments.filter(t => t.status === 'completed').sort((a,b) => new Date(b.date) - new Date(a.date));
+
+                 if (inProgress.length === 0) inProgressTournaments.innerHTML = '<p class="text-gray-500">Nessun torneo in corso.</p>';
+                 if (completed.length === 0) completedTournaments.innerHTML = '<p class="text-gray-500">Nessun torneo completato.</p>';
+
+                 inProgress.forEach(t => inProgressTournaments.appendChild(createTournamentCard(t)));
+                 completed.forEach(t => completedTournaments.appendChild(createTournamentCard(t)));
+            }
+
+            function createTournamentCard(tournament) {
+                const card = document.createElement('div');
+                card.className = "p-4 bg-white rounded-lg border shadow-sm cursor-pointer hover:shadow-md transition-shadow";
+                
+                const winnerInfo = tournament.status === 'completed' ? `🏆 ${getTeamName(tournament, tournament.winnerTeamId)}` : `${tournament.teams.length} Squadre`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold text-lg text-gray-800">${tournament.name}</h4>
+                            <p class="text-sm text-gray-500">${new Date(tournament.date).toLocaleDateString('it-IT')}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-700">${winnerInfo}</p>
+                            ${tournament.affectsElo ? '<span class="text-xs font-bold p-1 rounded bg-yellow-100 text-yellow-800">ELO ATTIVO</span>' : ''}
+                        </div>
+                    </div>`;
+                card.addEventListener('click', () => openTournamentViewModal(tournament.id));
+                return card;
+            }
+
+            function getTeamName(tournament, teamId) {
+                if(!teamId) return 'TBD';
+                const team = tournament.teams.find(t => t.id === teamId);
+                if (!team) return 'Sconosciuto';
+                const p1 = getPlayer(team.player1Id);
+                const p2 = getPlayer(team.player2Id);
+                return p1 && p2 ? `${p1.name} & ${p2.name}` : `Squadra ${team.id}`;
+            }
+
+            function openTournamentViewModal(tournamentId) {
+                const tournament = tournaments.find(t => t.id === tournamentId);
+                if (!tournament) return;
+                
+                tournamentViewHeader.innerHTML = `
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">${tournament.name}</h2>
+                        <p class="text-gray-600">${new Date(tournament.date).toLocaleDateString('it-IT')} - ${tournament.teams.length} squadre</p>
+                    </div>
+                     <button id="closeTournamentViewModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
+                `;
+                document.getElementById('closeTournamentViewModal').addEventListener('click', () => closeModal(tournamentViewModal));
+                renderTournamentBracket(tournament);
+                openModal(tournamentViewModal);
+            }
+            
+            function renderTournamentBracket(tournament) {
+                let bracketHTML = '<div class="tournament-bracket">';
+                tournament.rounds.forEach((round, roundIndex) => {
+                    bracketHTML += `<div class="round" style="min-width: 200px;">`;
+                    round.forEach(match => {
+                        const teamA = tournament.teams.find(t => t.id === match.teamAId);
+                        const teamB = tournament.teams.find(t => t.id === match.teamBId);
+                        
+                        bracketHTML += `
+                         <div class="match">
+                             <div class="team ${match.winnerTeamId === teamA?.id ? 'winner' : ''} ${!teamA ? 'tbd' : ''}" data-team-id="${teamA?.id}" data-match-id="${match.id}">${getTeamName(tournament, teamA?.id)}</div>
+                             <div class="team ${match.winnerTeamId === teamB?.id ? 'winner' : ''} ${!teamB ? 'tbd' : ''}" data-team-id="${teamB?.id}" data-match-id="${match.id}">${getTeamName(tournament, teamB?.id)}</div>
+                         </div>
+                        `;
+                    });
+                    bracketHTML += '</div>';
+                });
+                 bracketHTML += '</div>';
+                if(tournament.status === 'completed') {
+                    const winnerName = getTeamName(tournament, tournament.winnerTeamId);
+                     bracketHTML += `<div class="text-center mt-4 text-2xl font-bold">🏆 Vincitori: <span class="text-[--accent]">${winnerName}</span></div>`;
+                }
+                tournamentBracketContainer.innerHTML = bracketHTML;
+
+                 if(tournament.status === 'inprogress') {
+                     tournamentBracketContainer.querySelectorAll('.team:not(.tbd)').forEach(el => {
+                        el.addEventListener('click', () => {
+                             const teamId = parseInt(el.dataset.teamId);
+                             const matchId = el.dataset.matchId;
+                             recordTournamentMatchWinner(tournament.id, matchId, teamId);
+                        });
+                     });
+                 }
+            }
+
+            function recordTournamentMatchWinner(tournamentId, matchId, winnerTeamId) {
+                const tournament = tournaments.find(t => t.id === tournamentId);
+                let match, roundIndex;
+                for(let i = 0; i < tournament.rounds.length; i++) {
+                    const found = tournament.rounds[i].find(m => m.id === matchId);
+                    if(found) {
+                        match = found;
+                        roundIndex = i;
+                        break;
+                    }
+                }
+
+                if (match && !match.winnerTeamId) {
+                    match.winnerTeamId = winnerTeamId;
+                    
+                    // Check if round is complete to generate next round
+                    const currentRound = tournament.rounds[roundIndex];
+                    if (currentRound.every(m => m.winnerTeamId)) {
+                        const winners = currentRound.map(m => m.winnerTeamId);
+                        if (winners.length > 1) {
+                            const nextRound = [];
+                            for(let i=0; i < winners.length; i+=2) {
+                                nextRound.push({
+                                    id: `m-${tournament.id}-${roundIndex+1}-${i/2}`,
+                                    teamAId: winners[i],
+                                    teamBId: winners[i+1],
+                                    winnerTeamId: null
+                                });
+                            }
+                            tournament.rounds.push(nextRound);
+                        } else { // Tournament finished
+                            tournament.status = 'completed';
+                            tournament.winnerTeamId = winners[0];
+                            showMessage(`Torneo "${tournament.name}" completato!`);
+                        }
+                    }
+
+                    if(tournament.affectsElo) recalculateAllElos();
+                    saveAndRender();
+                    renderTournamentBracket(tournament); // Re-render the bracket
+                }
             }
 
 
@@ -1991,6 +2522,11 @@
                     updateTeamEloDisplays();
                 });
 
+                // Tournament Listeners
+                createNewTournamentBtn.addEventListener('click', openTournamentCreationModal);
+                closeTournamentCreationModal.addEventListener('click', () => closeModal(tournamentCreationModal));
+                setupTournamentCreationWizard();
+
                 setupAccordions();
                 loadFromStorage();
                 recalculateAllElos();
@@ -2011,5 +2547,4 @@
     </script>
 </body>
 </html>
-
 
