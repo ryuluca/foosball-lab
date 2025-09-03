@@ -30,12 +30,12 @@
             --text-muted: #6c757d;
             --border-color: #dee2e6;
             --card-bg: #ffffff;
-            --primary: #148cb4;
-            --primary-dark: #106f8f;
+            --team-blue: #148cb4;
+            --team-blue-dark: #106f8f;
+            --team-red: #dc3545;
+            --team-red-dark: #b02a37;
             --accent: #FFD22E;
             --accent-dark: #f0c01a;
-            --danger: #dc3545;
-            --danger-dark: #b02a37;
             --success: #28a745;
         }
         body {
@@ -71,11 +71,11 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .btn-secondary {
-            background-color: var(--primary);
+            background-color: var(--team-blue);
             color: white;
         }
         .btn-secondary:hover {
-            background-color: var(--primary-dark);
+            background-color: var(--team-blue-dark);
         }
         .btn:disabled {
             background-color: #e9ecef;
@@ -85,11 +85,11 @@
             box-shadow: none;
         }
         .btn-danger {
-            background-color: var(--danger);
+            background-color: var(--team-red);
             color: white;
         }
          .btn-danger:hover {
-            background-color: var(--danger-dark);
+            background-color: var(--team-red-dark);
         }
         select, input[type="text"], input[type="date"] {
             background-color: #fff;
@@ -104,8 +104,8 @@
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(255, 210, 46, 0.25);
         }
-        .team-a-color { color: var(--primary); }
-        .team-b-color { color: #6c757d; } /* Grigio per team B */
+        .team-blue-color { color: var(--team-blue); }
+        .team-red-color { color: var(--team-red); }
         .accordion-content {
             overflow: hidden;
             transition: max-height 0.3s ease-out;
@@ -121,8 +121,8 @@
             color: var(--text-muted);
         }
         .modal-tab.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
+            color: var(--team-blue);
+            border-bottom-color: var(--team-blue);
         }
         .role-label {
             display: block;
@@ -143,7 +143,7 @@
             cursor: pointer;
         }
         .wizard-action-card:hover {
-            border-color: var(--primary);
+            border-color: var(--team-blue);
             background-color: #f8f9fa;
             transform: translateY(-2px);
         }
@@ -185,11 +185,11 @@
                              <input type="date" id="matchDate">
                         </div>
 
-                        <!-- Squadra A -->
+                        <!-- Squadra Blu -->
                         <div>
                             <div class="flex justify-between items-baseline">
-                                <h3 class="font-bold team-a-color mb-2 text-lg">Squadra A</h3>
-                                <span class="text-sm font-bold team-a-color" id="teamAEloDisplay">ELO: -</span>
+                                <h3 class="font-bold team-blue-color mb-2 text-lg">Squadra Blu</h3>
+                                <span class="text-sm font-bold team-blue-color" id="teamAEloDisplay">ELO: -</span>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
@@ -203,11 +203,11 @@
                             </div>
                         </div>
 
-                        <!-- Squadra B -->
+                        <!-- Squadra Rossa -->
                         <div>
                              <div class="flex justify-between items-baseline">
-                                <h3 class="font-bold team-b-color mb-2 text-lg">Squadra B</h3>
-                                <span class="text-sm font-bold team-b-color" id="teamBEloDisplay">ELO: -</span>
+                                <h3 class="font-bold team-red-color mb-2 text-lg">Squadra Rossa</h3>
+                                <span class="text-sm font-bold team-red-color" id="teamBEloDisplay">ELO: -</span>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
@@ -226,13 +226,13 @@
                         <div>
                             <h3 class="font-bold text-gray-600 mb-2 text-lg">Vincitore</h3>
                             <div class="flex items-center space-x-2 rounded-lg bg-gray-100 p-1">
-                                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-[--primary] has-[:checked]:text-white has-[:checked]:shadow-md">
+                                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-[--team-blue] has-[:checked]:text-white has-[:checked]:shadow-md">
                                     <input type="radio" name="winner" value="A" class="sr-only" checked>
-                                    <span>Squadra A</span>
+                                    <span>Squadra Blu</span>
                                 </label>
-                                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-gray-600 has-[:checked]:text-white has-[:checked]:shadow-md">
+                                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-[--team-red] has-[:checked]:text-white has-[:checked]:shadow-md">
                                     <input type="radio" name="winner" value="B" class="sr-only">
-                                    <span>Squadra B</span>
+                                    <span>Squadra Rossa</span>
                                 </label>
                             </div>
                         </div>
@@ -251,7 +251,7 @@
                     </button>
                     <div class="accordion-content hidden pt-4">
                         <div class="space-y-4">
-                            <button id="linkFileBtn" class="btn w-full" style="background-color: var(--primary); color: white;">Collega/Crea dati.json</button>
+                            <button id="linkFileBtn" class="btn w-full" style="background-color: var(--team-blue); color: white;">Collega/Crea dati.json</button>
                              <p class="text-xs text-center text-gray-500">Salva i dati in un file locale per la massima persistenza e condivisione.</p>
                              <div class="border-t pt-4 mt-4">
                                  <h3 class="font-semibold text-gray-700 mb-2 text-lg">Backup / Ripristino</h3>
@@ -285,8 +285,8 @@
                         <!-- Filtro Classifica -->
                         <div class="flex flex-col sm:flex-row items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
                             <div class="flex items-center gap-4">
-                                <input type="radio" id="rankOverall" name="rankType" value="overall" class="text-[--primary] focus:ring-[--primary]" checked><label for="rankOverall" class="text-sm font-medium">Generale</label>
-                                <input type="radio" id="rankPeriod" name="rankType" value="period" class="text-[--primary] focus:ring-[--primary]"><label for="rankPeriod" class="text-sm font-medium">Periodo</label>
+                                <input type="radio" id="rankOverall" name="rankType" value="overall" class="text-[--team-blue] focus:ring-[--team-blue]" checked><label for="rankOverall" class="text-sm font-medium">Generale</label>
+                                <input type="radio" id="rankPeriod" name="rankType" value="period" class="text-[--team-blue] focus:ring-[--team-blue]"><label for="rankPeriod" class="text-sm font-medium">Periodo</label>
                             </div>
                             <div id="leaderboardDateFilters" class="w-full sm:w-auto flex-grow flex flex-col sm:flex-row items-center gap-2 hidden">
                                 <input type="date" id="leaderboardStartDate" class="text-sm p-1 w-full">
@@ -418,7 +418,7 @@
             </div>
             <div class="mt-6 text-sm">
                 <label class="flex items-center justify-center gap-2">
-                    <input type="checkbox" id="hideWizardCheckbox" class="rounded border-gray-300 text-[--primary] focus:ring-[--primary]">
+                    <input type="checkbox" id="hideWizardCheckbox" class="rounded border-gray-300 text-[--team-blue] focus:ring-[--team-blue]">
                     <span>Non mostrare più all'avvio</span>
                 </label>
             </div>
@@ -766,9 +766,9 @@
                 
                 recordSummary.innerHTML = `
                     <p><strong>Data:</strong> ${new Date(matchDateInput.value).toLocaleDateString('it-IT')}</p>
-                    <p><strong>Squadra A:</strong> ⚔️ ${teamAPlayers.attack.name} & 🛡️ ${teamAPlayers.defense.name}</p>
-                    <p><strong>Squadra B:</strong> ⚔️ ${teamBPlayers.attack.name} & 🛡️ ${teamBPlayers.defense.name}</p>
-                    <p><strong>Vincitore:</strong> <span class="font-bold ${winner === 'A' ? 'team-a-color' : 'team-b-color'}">Squadra ${winner}</span></p>
+                    <p><strong>Squadra Blu:</strong> ⚔️ ${teamAPlayers.attack.name} & 🛡️ ${teamAPlayers.defense.name}</p>
+                    <p><strong>Squadra Rossa:</strong> ⚔️ ${teamBPlayers.attack.name} & 🛡️ ${teamBPlayers.defense.name}</p>
+                    <p><strong>Vincitore:</strong> <span class="font-bold ${winner === 'A' ? 'team-blue-color' : 'team-red-color'}">Squadra ${winner === 'A' ? 'Blu' : 'Rossa'}</span></p>
                 `;
                 openModal(confirmRecordModal);
             }
@@ -864,7 +864,7 @@
                             <span class="text-lg font-medium text-gray-800">${player.name}</span>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="font-bold text-lg" style="color: var(--primary)">${Math.round(player.elo)}</span>
+                            <span class="font-bold text-lg" style="color: var(--team-blue)">${Math.round(player.elo)}</span>
                             <button class="btn-danger text-xs px-2 py-1 rounded" data-id="${player.id}">X</button>
                         </div>`;
                     playerRow.querySelector('button').addEventListener('click', e => { e.stopPropagation(); deletePlayer(player.id); });
@@ -934,9 +934,9 @@
                      matchRow.innerHTML = `
                         <div class="text-sm text-gray-600 font-medium">${new Date(match.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                         <div class="md:col-span-2 flex flex-col md:flex-row md:items-center justify-center text-center gap-2 md:gap-4 text-sm">
-                            <span class="truncate ${match.winner === 'A' ? 'font-bold team-a-color' : 'text-gray-500'}">⚔️${teamAPlayers.attack.name} & 🛡️${teamAPlayers.defense.name} <span class="text-xs font-normal ${eloChangeStringA.startsWith('+') ? 'text-green-600' : 'text-red-600'}">(${eloChangeStringA})</span></span>
+                            <span class="truncate ${match.winner === 'A' ? 'font-bold team-blue-color' : 'text-gray-500'}">⚔️${teamAPlayers.attack.name} & 🛡️${teamAPlayers.defense.name} <span class="text-xs font-normal ${eloChangeStringA.startsWith('+') ? 'text-green-600' : 'text-red-600'}">(${eloChangeStringA})</span></span>
                             <span class="text-gray-400 font-bold text-xs">VS</span>
-                            <span class="truncate ${match.winner === 'B' ? 'font-bold text-gray-800' : 'text-gray-500'}">⚔️${teamBPlayers.attack.name} & 🛡️${teamBPlayers.defense.name} <span class="text-xs font-normal ${eloChangeStringB.startsWith('+') ? 'text-green-600' : 'text-red-600'}">(${eloChangeStringB})</span></span>
+                            <span class="truncate ${match.winner === 'B' ? 'font-bold team-red-color' : 'text-gray-500'}">⚔️${teamBPlayers.attack.name} & 🛡️${teamBPlayers.defense.name} <span class="text-xs font-normal ${eloChangeStringB.startsWith('+') ? 'text-green-600' : 'text-red-600'}">(${eloChangeStringB})</span></span>
                         </div>
                         <div class="flex justify-end items-center">
                              <button class="btn-danger text-xs px-2 py-1 rounded" data-id="${match.id}">Elimina</button>
@@ -958,7 +958,7 @@
                     const optionHTML = `<option value="${player.id}">${player.name}</option>`;
                     comparisonPlayerList.innerHTML += `
                     <label class="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-gray-100">
-                        <input type="checkbox" value="${player.id}" class="rounded border-gray-300 text-[--primary] focus:ring-[--primary]">
+                        <input type="checkbox" value="${player.id}" class="rounded border-gray-300 text-[--team-blue] focus:ring-[--team-blue]">
                         <span>${player.name}</span>
                     </label>`;
                     synergyPivotPlayer.innerHTML += optionHTML;
@@ -987,7 +987,7 @@
                     teamBEloDisplay.textContent = 'ELO: -';
                 }
 
-                teamAssistantBtn.disabled = !(teamASelects.attack.value && teamASelects.defense.value && teamASelects.attack.value !== teamASelects.defense.value);
+                teamAssistantBtn.disabled = !((pA_att_id && pA_def_id && pA_att_id !== pA_def_id) || (pB_att_id && pB_def_id && pB_att_id !== pB_def_id));
             }
             
             // --- Analisi & Matchmaking ---
@@ -1047,7 +1047,7 @@
                                 <p class="text-sm text-gray-600 mt-1">${desc}</p>
                             </div>
                             <div class="text-right ml-4 flex-shrink-0">
-                                <p class="font-bold text-lg" style="color:var(--primary)">${Math.round(pair.avgElo)}</p>
+                                <p class="font-bold text-lg" style="color:var(--team-blue)">${Math.round(pair.avgElo)}</p>
                                 <p class="text-xs text-gray-500">ELO Medio</p>
                             </div>
                         </div>
@@ -1121,7 +1121,7 @@
                             <p class="text-sm text-gray-500">Proposto come: <span class="font-semibold">${partnerRoleIcon} ${partnerRoleText}</span></p>
                         </div>
                         <div class="text-right">
-                             <p class="font-bold text-lg" style="color:var(--primary)">${Math.round(data.medianElo)} <span class="text-sm font-normal text-gray-500">${data.basedOn === 'performance' ? 'ELO Med.' : 'ELO St.'}</span></p>
+                             <p class="font-bold text-lg" style="color:var(--team-blue)">${Math.round(data.medianElo)} <span class="text-sm font-normal text-gray-500">${data.basedOn === 'performance' ? 'ELO Med.' : 'ELO St.'}</span></p>
                              ${data.matches > 0 ? `<div class="text-xs font-semibold mt-1"><span class="text-green-600">${data.wins}V</span> / <span class="text-red-600">${losses}S</span> <span class="text-gray-400 font-normal">(${data.matches} G)</span></div>` : '<p class="text-xs text-gray-400 mt-1">Nessun precedente</p>'}
                         </div>`;
                     partnerList.appendChild(card);
@@ -1138,7 +1138,7 @@
                 
                 playerProfileHeader.innerHTML = `
                     <h2 class="text-2xl font-bold text-gray-800">${player.name}</h2>
-                    <p class="text-lg font-semibold" style="color: var(--primary)">ELO: ${Math.round(player.elo)}</p>`;
+                    <p class="text-lg font-semibold" style="color: var(--team-blue)">ELO: ${Math.round(player.elo)}</p>`;
 
                 const dates = player.history.slice(1).map(h => h.date).sort();
                 historyStartDateInput.value = dates.length ? dates[0] : '';
@@ -1257,7 +1257,7 @@
                         </div>
                         <div class="flex items-center gap-4 text-sm text-right">
                              <div class="font-semibold"><span class="text-green-600">${t.wins}V</span> / <span class="text-red-600">${losses}S</span> <span class="text-gray-400 font-normal">(${t.matches} G)</span></div>
-                             <div class="font-bold text-lg" style="color:var(--primary)">${Math.round(t.medianElo)} <span class="text-sm font-normal text-gray-500">ELO Med.</span></div>
+                             <div class="font-bold text-lg" style="color:var(--team-blue)">${Math.round(t.medianElo)} <span class="text-sm font-normal text-gray-500">ELO Med.</span></div>
                         </div>`;
                     bestTeammatesContainer.appendChild(row);
                 });
@@ -1298,13 +1298,13 @@
                         </button>
                         <div class="player-match-accordion-content hidden p-4 border-t border-gray-200 bg-white rounded-b-lg">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="team-a-color">
-                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra A (ELO Medio: ${Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2)})</h4>
+                                <div class="team-blue-color">
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Blu (ELO Medio: ${Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2)})</h4>
                                     <p>⚔️ ${teamAPlayers.attack.name}: <span class="font-semibold">${match.teamA_elos.attack}</span></p>
                                     <p>🛡️ ${teamAPlayers.defense.name}: <span class="font-semibold">${match.teamA_elos.defense}</span></p>
                                 </div>
-                                <div class="team-b-color">
-                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra B (ELO Medio: ${Math.round((match.teamB_elos.attack + match.teamB_elos.defense) / 2)})</h4>
+                                <div class="team-red-color">
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Rossa (ELO Medio: ${Math.round((match.teamB_elos.attack + match.teamB_elos.defense) / 2)})</h4>
                                     <p>⚔️ ${teamBPlayers.attack.name}: <span class="font-semibold">${match.teamB_elos.attack}</span></p>
                                     <p>🛡️ ${teamBPlayers.defense.name}: <span class="font-semibold">${match.teamB_elos.defense}</span></p>
                                 </div>
