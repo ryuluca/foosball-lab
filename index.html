@@ -609,6 +609,9 @@
             const teamAEloDisplay = document.getElementById('teamAEloDisplay');
             const teamBEloDisplay = document.getElementById('teamBEloDisplay');
             const teamAssistantBtn = document.getElementById('teamAssistantBtn');
+            const invertRolesABtn = document.getElementById('invertRolesABtn');
+            const invertRolesBBtn = document.getElementById('invertRolesBBtn');
+            const invertTeamsBtn = document.getElementById('invertTeamsBtn');
 
             // Leaderboard Sorting
             const nameSortBtn = document.getElementById('nameSortBtn');
@@ -1838,6 +1841,32 @@
                     renderMatches();
                 });
 
+                invertRolesABtn.addEventListener('click', () => {
+                    const temp = teamASelects.attack.value;
+                    teamASelects.attack.value = teamASelects.defense.value;
+                    teamASelects.defense.value = temp;
+                    updateTeamEloDisplays();
+                });
+
+                invertRolesBBtn.addEventListener('click', () => {
+                    const temp = teamBSelects.attack.value;
+                    teamBSelects.attack.value = teamBSelects.defense.value;
+                    teamBSelects.defense.value = temp;
+                    updateTeamEloDisplays();
+                });
+
+                invertTeamsBtn.addEventListener('click', () => {
+                    const tempA_att = teamASelects.attack.value;
+                    const tempA_def = teamASelects.defense.value;
+                    
+                    teamASelects.attack.value = teamBSelects.attack.value;
+                    teamASelects.defense.value = teamBSelects.defense.value;
+
+                    teamBSelects.attack.value = tempA_att;
+                    teamBSelects.defense.value = tempA_def;
+                    
+                    updateTeamEloDisplays();
+                });
 
                 setupAccordions();
                 loadFromStorage();
