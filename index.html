@@ -939,7 +939,7 @@
             const getPlayer = (id) => players.find(p => p.id === id);
             const getPlayers = (idArray) => idArray.map(id => getPlayer(id));
             const calculateMedian = (arr) => {
-                if (!arr.length) return 0;
+                if (!arr || arr.length === 0) return 0;
                 const sorted = arr.slice().sort((a,b) => a - b);
                 const mid = Math.floor(sorted.length / 2);
                 return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
@@ -1207,7 +1207,7 @@
                 unrankedPlayersContainer.innerHTML = unrankedPlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Tutti i giocatori sono classificati.</p>`;
                 unrankedPlayers.forEach(player => {
                      const playerRow = document.createElement('div');
-                     playerRow.className = 'flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors';
+                     playerRow.className = 'flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer';
                      playerRow.innerHTML = `
                          <span class="text-lg font-medium text-gray-800">${player.name}</span>
                          <div class="flex items-center gap-4">
@@ -1215,6 +1215,7 @@
                              <button class="btn-danger text-xs px-2 py-1 rounded" title="Elimina Giocatore">Elimina</button>
                          </div>`;
                      playerRow.querySelector('button').addEventListener('click', e => { e.stopPropagation(); confirmDeletePlayer(player.id); });
+                     playerRow.addEventListener('click', () => openHistoryModal(player.id));
                      unrankedPlayersContainer.appendChild(playerRow);
                 });
                 
@@ -1655,7 +1656,7 @@
                     const resultClass = didPlayerWin ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
                     
                     const isEloActive = !match.isTournament || (tournaments.find(t => t.name === match.tournamentName)?.affectsElo ?? false);
-                    const eloChange = isEloActive ? Math.round(didPlayerWin ? match.eloChange : -match.eloChange) : 0;
+                    const eloChange = isEloActive && match.eloChange != null ? Math.round(didPlayerWin ? match.eloChange : -match.eloChange) : 0;
                     const resultText = didPlayerWin ? 'Vittoria' : 'Sconfitta';
                     const matchIcon = match.isTournament ? '🏆' : '🤝';
 
