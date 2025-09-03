@@ -275,40 +275,41 @@
             <!-- Colonna Classifica e Confronto -->
             <div class="lg:col-span-2 flex flex-col gap-8">
                 <!-- Classifica -->
-                <div class="card" id="leaderboard-card">
-                    <div class="flex justify-between items-start mb-4 flex-wrap gap-2">
-                        <div>
-                             <h2 class="text-2xl font-semibold text-gray-800">Classifica Giocatori</h2>
-                             <p class="text-sm text-gray-500">Clicca su un giocatore per l'analisi</p>
+                <div class="card">
+                    <button class="accordion-header flex justify-between items-center w-full">
+                        <h2 class="text-2xl font-semibold text-gray-800">Classifica Giocatori</h2>
+                        <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div id="leaderboard-card" class="accordion-content hidden pt-4">
+                        <p class="text-sm text-gray-500 -mt-2 mb-4">Clicca su un giocatore per l'analisi</p>
+                        <!-- Filtro Classifica -->
+                        <div class="flex flex-col sm:flex-row items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-4">
+                                <input type="radio" id="rankOverall" name="rankType" value="overall" class="text-[--primary] focus:ring-[--primary]" checked><label for="rankOverall" class="text-sm font-medium">Generale</label>
+                                <input type="radio" id="rankPeriod" name="rankType" value="period" class="text-[--primary] focus:ring-[--primary]"><label for="rankPeriod" class="text-sm font-medium">Periodo</label>
+                            </div>
+                            <div id="leaderboardDateFilters" class="w-full sm:w-auto flex-grow flex flex-col sm:flex-row items-center gap-2 hidden">
+                                <input type="date" id="leaderboardStartDate" class="text-sm p-1 w-full">
+                                <input type="date" id="leaderboardEndDate" class="text-sm p-1 w-full">
+                                <button id="leaderboardFilterBtn" class="btn btn-primary p-2 text-sm w-full sm:w-auto">Filtra</button>
+                            </div>
                         </div>
-                    </div>
-                    <!-- Filtro Classifica -->
-                    <div class="flex flex-col sm:flex-row items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
-                         <div class="flex items-center gap-4">
-                            <input type="radio" id="rankOverall" name="rankType" value="overall" class="text-[--primary] focus:ring-[--primary]" checked><label for="rankOverall" class="text-sm font-medium">Generale</label>
-                            <input type="radio" id="rankPeriod" name="rankType" value="period" class="text-[--primary] focus:ring-[--primary]"><label for="rankPeriod" class="text-sm font-medium">Periodo</label>
-                         </div>
-                         <div id="leaderboardDateFilters" class="w-full sm:w-auto flex-grow flex flex-col sm:flex-row items-center gap-2 hidden">
-                            <input type="date" id="leaderboardStartDate" class="text-sm p-1 w-full">
-                            <input type="date" id="leaderboardEndDate" class="text-sm p-1 w-full">
-                            <button id="leaderboardFilterBtn" class="btn btn-primary p-2 text-sm w-full sm:w-auto">Filtra</button>
-                         </div>
-                    </div>
 
-                    <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg font-bold text-gray-600 text-sm mb-2">
-                        <div class="flex items-center gap-4">
-                            <span class="w-8 text-center">#</span>
-                            <button id="nameSortBtn" class="sort-btn flex items-center gap-1 cursor-pointer">
-                                <span>Nome</span>
-                                <svg id="nameSortIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg font-bold text-gray-600 text-sm mb-2">
+                            <div class="flex items-center gap-4">
+                                <span class="w-8 text-center">#</span>
+                                <button id="nameSortBtn" class="sort-btn flex items-center gap-1 cursor-pointer">
+                                    <span>Nome</span>
+                                    <svg id="nameSortIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                            </div>
+                            <button id="eloSortBtn" class="sort-btn flex items-center gap-1 cursor-pointer">
+                                <span>ELO</span>
+                                <svg id="eloSortIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
                         </div>
-                        <button id="eloSortBtn" class="sort-btn flex items-center gap-1 cursor-pointer">
-                            <span>ELO</span>
-                            <svg id="eloSortIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                        </button>
+                        <div id="leaderboard" class="space-y-2"></div>
                     </div>
-                    <div id="leaderboard" class="space-y-2"></div>
                 </div>
                  <!-- Centro Analisi Strategica -->
                 <div class="card">
