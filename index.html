@@ -2657,7 +2657,7 @@
 
                 matchDateInput.value = new Date().toISOString().split('T')[0];
                 addPlayerBtn.addEventListener('click', addPlayer);
-                playerNameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer() });
+                playerNameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer(); });
                 recordMatchBtn.addEventListener('click', preRecordMatch);
                 
                 const setupSortButton = (btn, icon, sortBy) => {
@@ -2687,7 +2687,7 @@
 
                 // --- Event Listeners per Modals ---
                 closeHistoryModalBtn.addEventListener('click', () => closeModal(historyModal));
-                historyModal.addEventListener('click', e => { if(e.target === historyModal) closeModal(historyModal) });
+                historyModal.addEventListener('click', e => { if(e.target === historyModal) closeModal(historyModal); });
                 historyFilterBtn.addEventListener('click', updateAllPlayerData);
                 Object.values(playerAnalysisTabs).forEach(tab => tab.addEventListener('click', () => switchTab(tab.id.replace('tab', '').toLowerCase())));
                 playerMatchSortSelect.addEventListener('change', renderPlayerMatchHistory);
