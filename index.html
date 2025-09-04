@@ -519,13 +519,16 @@
             <!-- Tab Content (Scrollable) -->
             <div class="overflow-y-auto flex-grow">
                 <div id="tabStatsContent" class="hidden">
-                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 text-center">
                         <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsMatchesPlayed">-</p><p class="text-sm text-gray-600">Partite Giocate</p></div>
                         <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-green-600" id="statsWinRate">-</p><p class="text-sm text-gray-600">Vittorie</p></div>
                         <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsEloChange">-</p><p class="text-sm text-gray-600">Variazione ELO</p></div>
+                        <div class="p-4 bg-blue-50 rounded-lg"><p class="text-2xl font-bold text-blue-800" id="statsBlueWinRate">-</p><p class="text-sm text-gray-600">Vittorie Squadra Blu</p></div>
+                        <div class="p-4 bg-red-50 rounded-lg"><p class="text-2xl font-bold text-red-800" id="statsRedWinRate">-</p><p class="text-sm text-gray-600">Vittorie Squadra Rossa</p></div>
                         <div class="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-300"><p class="text-2xl font-bold text-yellow-900 truncate" id="statsBestRole">-</p><p class="text-sm text-yellow-800">Ruolo Migliore</p></div>
                      </div>
-                     <h3 class="text-xl font-semibold text-gray-800 mb-3">Analisi Sinergie Compagni</h3>
+                     <div id="bestSynergyHighlight" class="mb-6"></div>
+                     <h3 class="text-xl font-semibold text-gray-800 mb-3">Sinergie Compagni (Dettaglio)</h3>
                      <div id="bestTeammatesContainer" class="space-y-3"></div>
                 </div>
                 <div id="tabChartContent">
@@ -822,6 +825,9 @@
             const statsWinRate = document.getElementById('statsWinRate');
             const statsEloChange = document.getElementById('statsEloChange');
             const statsBestRole = document.getElementById('statsBestRole');
+            const statsBlueWinRate = document.getElementById('statsBlueWinRate');
+            const statsRedWinRate = document.getElementById('statsRedWinRate');
+            const bestSynergyHighlight = document.getElementById('bestSynergyHighlight');
             const bestTeammatesContainer = document.getElementById('bestTeammatesContainer');
             
             // Sezione Analisi Strategica
@@ -1585,6 +1591,16 @@
                 statsEloChange.textContent = `${eloChange >= 0 ? '+' : ''}${Math.round(eloChange)}`;
                 statsEloChange.className = `text-2xl font-bold ${eloChange > 0 ? 'text-green-600' : eloChange < 0 ? 'text-red-600' : 'text-gray-800'}`;
                 
+                // Team Color Win Rates
+                const blueMatches = playerMatches.filter(m => m.teamA.attack === player.id || m.teamA.defense === player.id);
+                const blueWins = blueMatches.filter(m => m.winner === 'A').length;
+                statsBlueWinRate.textContent = blueMatches.length > 0 ? `${Math.round((blueWins / blueMatches.length) * 100)}%` : '-';
+
+                const redMatches = playerMatches.filter(m => m.teamB.attack === player.id || m.teamB.defense === player.id);
+                const redWins = redMatches.filter(m => m.winner === 'B').length;
+                statsRedWinRate.textContent = redMatches.length > 0 ? `${Math.round((redWins / redMatches.length) * 100)}%` : '-';
+
+
                 // Role Analysis
                 const attackMatches = playerMatches.filter(m => m.teamA.attack === player.id || m.teamB.attack === player.id);
                 const defenseMatches = playerMatches.filter(m => m.teamA.defense === player.id || m.teamB.defense === player.id);
@@ -1601,39 +1617,75 @@
                     const isPlayerInTeamA = match.teamA.attack === player.id || match.teamA.defense === player.id;
                     const playerRole = isPlayerInTeamA ? (match.teamA.attack === player.id ? 'attack' : 'defense') : (match.teamB.attack === player.id ? 'attack' : 'defense');
                     const team = isPlayerInTeamA ? match.teamA : match.teamB;
-                    const teamElos = isPlayerInTeamA ? match.teamA_elos : match.teamB_elos;
                     const teammateId = playerRole === 'attack' ? team.defense : team.attack;
                     
                     if (!teammateId || !getPlayer(teammateId)) return;
 
-                    const key = `${teammateId}-${playerRole}`;
-                    if (!teammateStats[key]) {
-                        teammateStats[key] = { id: teammateId, name: getPlayer(teammateId).name, playerRole, matches: 0, wins: 0, teamElos: [] };
+                    if (!teammateStats[teammateId]) {
+                        teammateStats[teammateId] = { 
+                            id: teammateId, 
+                            name: getPlayer(teammateId).name,
+                            playerAttack: { matches: 0, wins: 0 },
+                            playerDefense: { matches: 0, wins: 0 }
+                        };
                     }
                     
-                    const stats = teammateStats[key];
-                    stats.matches++;
-                    if ((isPlayerInTeamA && match.winner === 'A') || (!isPlayerInTeamA && match.winner === 'B')) stats.wins++;
-                    if(teamElos) stats.teamElos.push((teamElos.attack + teamElos.defense) / 2);
+                    const stats = teammateStats[teammateId];
+                    const scenario = playerRole === 'attack' ? stats.playerAttack : stats.playerDefense;
+                    scenario.matches++;
+                    if ((isPlayerInTeamA && match.winner === 'A') || (!isPlayerInTeamA && match.winner === 'B')) {
+                        scenario.wins++;
+                    }
                 });
                 
-                const teammates = Object.values(teammateStats);
-                teammates.forEach(t => t.medianElo = calculateMedian(t.teamElos));
-                teammates.sort((a, b) => b.medianElo - a.medianElo);
+                const allCombinations = [];
+                Object.values(teammateStats).forEach(partner => {
+                    if (partner.playerAttack.matches > 0) {
+                        allCombinations.push({
+                            partnerId: partner.id, partnerName: partner.name,
+                            playerRole: 'attack', partnerRole: 'defense',
+                            ...partner.playerAttack,
+                            winRate: (partner.playerAttack.wins / partner.playerAttack.matches) * 100
+                        });
+                    }
+                    if (partner.playerDefense.matches > 0) {
+                         allCombinations.push({
+                            partnerId: partner.id, partnerName: partner.name,
+                            playerRole: 'defense', partnerRole: 'attack',
+                             ...partner.playerDefense,
+                            winRate: (partner.playerDefense.wins / partner.playerDefense.matches) * 100
+                        });
+                    }
+                });
                 
-                bestTeammatesContainer.innerHTML = teammates.length ? '' : `<p class="text-center text-gray-500 py-4">Nessuna sinergia analizzabile in questo periodo.</p>`;
-                teammates.forEach(t => {
-                    const losses = t.matches - t.wins;
+                allCombinations.sort((a,b) => b.winRate - a.winRate || b.matches - a.matches);
+
+                if (allCombinations.length > 0) {
+                    const best = allCombinations[0];
+                    bestSynergyHighlight.innerHTML = `
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Miglior Sinergia</h3>
+                        <div class="p-4 bg-green-50 border-2 border-green-200 rounded-lg text-center">
+                             <p class="text-lg">La tua miglior intesa è con <strong class="text-green-800">${best.partnerName}</strong>.</p>
+                             <p class="text-gray-700 mt-1">Con te in <strong class="text-green-800">${best.playerRole === 'attack' ? '⚔️ Attacco' : '🛡️ Difesa'}</strong> e lui/lei in <strong class="text-green-800">${best.partnerRole === 'attack' ? '⚔️ Attacco' : '🛡️ Difesa'}</strong>, avete una percentuale di vittoria del <strong class="text-2xl text-green-800">${best.winRate.toFixed(0)}%</strong> su ${best.matches} partite.</p>
+                        </div>
+                    `;
+                } else {
+                    bestSynergyHighlight.innerHTML = '';
+                }
+
+                bestTeammatesContainer.innerHTML = allCombinations.length ? '' : `<p class="text-center text-gray-500 py-4">Nessuna sinergia analizzabile in questo periodo.</p>`;
+                allCombinations.forEach(combo => {
+                    const losses = combo.matches - combo.wins;
                     const row = document.createElement('div');
                     row.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg flex-wrap gap-2';
                     row.innerHTML = `
                         <div class="flex items-center gap-3">
-                            <span class="font-semibold text-gray-800">${t.name}</span>
-                            <span class="text-xs font-bold p-1 rounded ${t.playerRole === 'attack' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}">Tu ${t.playerRole === 'attack' ? '⚔️' : '🛡️'}</span>
+                            <span class="font-semibold text-gray-800">${combo.partnerName}</span>
+                            <span class="text-xs font-bold p-1 rounded ${combo.playerRole === 'attack' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}">Tu ${combo.playerRole === 'attack' ? '⚔️' : '🛡️'}</span>
                         </div>
                         <div class="flex items-center gap-4 text-sm text-right">
-                             <div class="font-semibold"><span class="text-green-600">${t.wins}V</span> / <span class="text-red-600">${losses}S</span> <span class="text-gray-400 font-normal">(${t.matches} G)</span></div>
-                             <div class="font-bold text-lg" style="color:var(--team-blue)">${Math.round(t.medianElo)} <span class="text-sm font-normal text-gray-500">ELO Med.</span></div>
+                             <div class="font-semibold"><span class="text-green-600">${combo.wins}V</span> / <span class="text-red-600">${losses}S</span> <span class="text-gray-400 font-normal">(${combo.matches} G)</span></div>
+                             <div class="font-bold text-lg" style="color:var(--team-blue)">${combo.winRate.toFixed(0)}%</div>
                         </div>`;
                     bestTeammatesContainer.appendChild(row);
                 });
@@ -2605,7 +2657,7 @@
 
                 matchDateInput.value = new Date().toISOString().split('T')[0];
                 addPlayerBtn.addEventListener('click', addPlayer);
-                playerNameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer(); });
+                playerNameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer() });
                 recordMatchBtn.addEventListener('click', preRecordMatch);
                 
                 const setupSortButton = (btn, icon, sortBy) => {
@@ -2635,7 +2687,7 @@
 
                 // --- Event Listeners per Modals ---
                 closeHistoryModalBtn.addEventListener('click', () => closeModal(historyModal));
-                historyModal.addEventListener('click', e => { if(e.target === historyModal) closeModal(historyModal); });
+                historyModal.addEventListener('click', e => { if(e.target === historyModal) closeModal(historyModal) });
                 historyFilterBtn.addEventListener('click', updateAllPlayerData);
                 Object.values(playerAnalysisTabs).forEach(tab => tab.addEventListener('click', () => switchTab(tab.id.replace('tab', '').toLowerCase())));
                 playerMatchSortSelect.addEventListener('change', renderPlayerMatchHistory);
