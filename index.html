@@ -1839,7 +1839,7 @@ I suoi dati nel periodo sono:
 
                 } catch (error) {
                     showMessage(`Errore analisi AI: ${error.message}`, true);
-                    geminiAnalysisResult.textContent = 'Impossibile generare l'analisi.';
+                    geminiAnalysisResult.textContent = "Impossibile generare l'analisi.";
                     generateGeminiBtn.classList.remove('hidden');
                 } finally {
                     geminiLoading.classList.add('hidden');
@@ -2804,14 +2804,10 @@ I suoi dati nel periodo sono:
 
             // --- Inizializzazione ---
             function init() {
-                const closeBtn = document.getElementById('closePreMatchAssistantBtn');
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', () => {
-                        // Bypass the main close function to ensure the modal closes,
-                        // as the user reported the button was not working.
-                        // This is a more direct approach.
-                        closeModal(preMatchAssistantModal);
-                    });
+                // Close button for the pre-match assistant modal
+                const closePreMatchAssistantBtn = document.getElementById('closePreMatchAssistantBtn');
+                if (closePreMatchAssistantBtn) {
+                    closePreMatchAssistantBtn.addEventListener('click', closePreMatchAssistant);
                 }
 
                 if ('serviceWorker' in navigator) {
@@ -3018,3 +3014,4 @@ I suoi dati nel periodo sono:
     </script>
 </body>
 </html>
+
