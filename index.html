@@ -2804,7 +2804,15 @@ I suoi dati nel periodo sono:
 
             // --- Inizializzazione ---
             function init() {
-                document.getElementById('closePreMatchAssistantBtn').addEventListener('click', closePreMatchAssistant);
+                const closeBtn = document.getElementById('closePreMatchAssistantBtn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        // Bypass the main close function to ensure the modal closes,
+                        // as the user reported the button was not working.
+                        // This is a more direct approach.
+                        closeModal(preMatchAssistantModal);
+                    });
+                }
 
                 if ('serviceWorker' in navigator) {
                     window.addEventListener('load', () => {
