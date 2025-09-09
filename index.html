@@ -475,6 +475,31 @@
         </div>
     </div>
 
+    <!-- Floating Chat Button -->
+    <button id="geminiChatFab" class="fixed bottom-6 right-6 bg-[--team-blue] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-3xl hover:bg-[--team-blue-dark] transition-transform hover:scale-110 z-40">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M16.81,5.85a5.3,5.3,0,0,0-7.62,0,5.46,5.46,0,0,0,0,7.62L12,16.29l2.81-2.82A5.4,5.4,0,0,0,16.81,5.85ZM15,10.5,12,13.4l-3-2.91a3.59,3.59,0,0,1,0-5,3.53,3.53,0,0,1,5,0,3.64,3.64,0,0,1,1,2.5,3.53,3.53,0,0,1-1,2.51Z"/><path d="M19.93,12.2a2.83,2.83,0,0,0,0-4.24,2.78,2.78,0,0,0-4,0l-1,1,4.06,4,1-1.05A2.9,2.9,0,0,0,19.93,12.2Z"/><path d="M12.2,19.93a2.83,2.83,0,0,0,4.24,0,2.78,2.78,0,0,0,0-4l-1,1-4.06,4,1.05,1Z"/><path d="M4.07,12.2a2.83,2.83,0,0,0,0-4.24,2.78,2.78,0,0,0-4,0l0,0,0,0a2.78,2.78,0,0,0,0,4l4.05,4,1-1Z"/><path d="M7.79,16.29a2.83,2.83,0,0,0,4.24,0,2.78,2.78,0,0,0,0-4l-1-1-4.05,4,1,1Z"/></svg>
+    </button>
+
+    <!-- Chat Modal -->
+    <div id="geminiChatModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-2xl h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 class="text-2xl font-semibold text-gray-800 flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-[--team-blue]" viewBox="0 0 24 24" fill="currentColor"><path d="M16.81,5.85a5.3,5.3,0,0,0-7.62,0,5.46,5.46,0,0,0,0,7.62L12,16.29l2.81-2.82A5.4,5.4,0,0,0,16.81,5.85ZM15,10.5,12,13.4l-3-2.91a3.59,3.59,0,0,1,0-5,3.53,3.53,0,0,1,5,0,3.64,3.64,0,0,1,1,2.5,3.53,3.53,0,0,1-1,2.51Z"/><path d="M19.93,12.2a2.83,2.83,0,0,0,0-4.24,2.78,2.78,0,0,0-4,0l-1,1,4.06,4,1-1.05A2.9,2.9,0,0,0,19.93,12.2Z"/><path d="M12.2,19.93a2.83,2.83,0,0,0,4.24,0,2.78,2.78,0,0,0,0-4l-1,1-4.06,4,1.05,1Z"/><path d="M4.07,12.2a2.83,2.83,0,0,0,0-4.24,2.78,2.78,0,0,0-4,0l0,0,0,0a2.78,2.78,0,0,0,0,4l4.05,4,1-1Z"/><path d="M7.79,16.29a2.83,2.83,0,0,0,4.24,0,2.78,2.78,0,0,0,0-4l-1-1-4.05,4,1,1Z"/></svg>
+                    <span>Chatta con l'Assistente Dati</span>
+                </h2>
+                <button id="closeGeminiChatModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
+            </div>
+            <div id="geminiChatMessages" class="flex-grow overflow-y-auto p-4 bg-gray-50 rounded-lg mb-4 space-y-4">
+                <!-- Messages will be injected here -->
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+                <input type="text" id="geminiChatInput" placeholder="Es: 'Chi è il giocatore con più partite giocate?'" class="flex-grow">
+                <button id="geminiChatSendBtn" class="btn btn-primary">Invia</button>
+            </div>
+        </div>
+    </div>
+
     <div id="preMatchAssistantModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="card w-full max-w-xl transform transition-all text-center relative">
             <button id="closePreMatchAssistantBtn" class="absolute top-2 right-4 text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
@@ -944,6 +969,13 @@
             const geminiAnalysisContainer = document.getElementById('geminiAnalysisContainer');
             const geminiAnalysisResult = document.getElementById('geminiAnalysisResult');
             const geminiLoading = document.getElementById('geminiLoading');
+            const geminiChatFab = document.getElementById('geminiChatFab');
+            const geminiChatModal = document.getElementById('geminiChatModal');
+            const closeGeminiChatModal = document.getElementById('closeGeminiChatModal');
+            const geminiChatMessages = document.getElementById('geminiChatMessages');
+            const geminiChatInput = document.getElementById('geminiChatInput');
+            const geminiChatSendBtn = document.getElementById('geminiChatSendBtn');
+
 
             // --- Stato dell'applicazione ---
             let players = [];
@@ -1166,16 +1198,51 @@
                         const actualScoreA = (matchData.winner === 'A') ? 1 : 0;
                         eloChange = K_FACTOR * (actualScoreA - expectedScoreA);
 
-                        Object.values(teamAPlayers).forEach(p => {
-                            const newElo = Math.round(p.elo + eloChange);
-                            p.elo = newElo;
-                            p.history.push({ date: matchData.date, elo: newElo });
-                        });
-                        Object.values(teamBPlayers).forEach(p => {
-                            const newElo = Math.round(p.elo - eloChange);
-                            p.elo = newElo;
-                            p.history.push({ date: matchData.date, elo: newElo });
-                        });
+                        const applyIndividualEloChanges = (teamPlayers, baseChange) => {
+                            const p1 = teamPlayers.attack;
+                            const p2 = teamPlayers.defense;
+                            const elo1 = p1.elo;
+                            const elo2 = p2.elo;
+
+                            // 1. Calcola il fattore di aggiustamento basato sulla differenza di ELO
+                            const eloDiff = Math.abs(elo1 - elo2);
+                            const eloAdjustmentFactor = Math.min(eloDiff / 800, 0.3); // Fino al 30% di aggiustamento. 400 ELO di diff = 15%
+
+                            let strongerPlayer, weakerPlayer;
+                            if (elo1 > elo2) {
+                                strongerPlayer = p1;
+                                weakerPlayer = p2;
+                            } else {
+                                strongerPlayer = p2;
+                                weakerPlayer = p1;
+                            }
+
+                            let strongerPlayerChange, weakerPlayerChange;
+                            if (baseChange > 0) { // Squadra vincente
+                                strongerPlayerChange = baseChange * (1 - eloAdjustmentFactor);
+                                weakerPlayerChange = baseChange * (1 + eloAdjustmentFactor);
+                            } else { // Squadra perdente
+                                strongerPlayerChange = baseChange * (1 + eloAdjustmentFactor);
+                                weakerPlayerChange = baseChange * (1 - eloAdjustmentFactor);
+                            }
+
+                            // 2. Applica un fattore di aggiustamento per il ruolo (l'attaccante ha un impatto maggiore)
+                            const roleAdjustmentFactor = 0.05; // 5% di impatto in più per l'attaccante
+                            const attackerChange = (p1 === strongerPlayer ? strongerPlayerChange : weakerPlayerChange) * (1 + roleAdjustmentFactor);
+                            const defenderChange = (p2 === strongerPlayer ? strongerPlayerChange : weakerPlayerChange) * (1 - roleAdjustmentFactor);
+
+                            // 3. Applica i cambiamenti e aggiorna la history
+                            const newEloAttacker = Math.round(p1.elo + attackerChange);
+                            p1.elo = newEloAttacker;
+                            p1.history.push({ date: matchData.date, elo: newEloAttacker });
+
+                            const newEloDefender = Math.round(p2.elo + defenderChange);
+                            p2.elo = newEloDefender;
+                            p2.history.push({ date: matchData.date, elo: newEloDefender });
+                        };
+
+                        applyIndividualEloChanges(teamAPlayers, eloChange);
+                        applyIndividualEloChanges(teamBPlayers, -eloChange);
                     }
 
                     [...Object.values(teamAPlayers), ...Object.values(teamBPlayers)].forEach(p => {
@@ -1370,21 +1437,24 @@
                                     </span>
                                 </div>
                                 <div class="flex justify-end items-center gap-2">
+                                    <button class="btn btn-secondary text-xs px-2 py-1 rounded generate-commentary-btn" data-match-id="${match.id}" ${match.isTournament ? 'style="display:none;"' : ''}>Analisi AI</button>
                                     ${container === matchHistoryContainer && !match.isTournament ? `<button class="btn-danger text-xs px-2 py-1 rounded" data-id="${match.id}">Elimina</button>` : ''}
                                     <svg class="w-5 h-5 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                                 </div>
                             </div>
                         </button>
                         <div class="player-match-accordion-content hidden p-4 border-t border-gray-200 bg-white rounded-b-lg space-y-4">
-                            <div>
-                                <h4 class="font-semibold text-gray-800 text-sm mb-1">🎙️ La cronaca del critico:</h4>
-                                <p class="text-sm italic text-gray-700">${match.commentaries?.critic || "Nessun commento."}</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-2"><span class="text-base">🎙️</span> La cronaca del critico</h4>
+                                    <p class="text-sm italic text-gray-600 border-l-2 pl-2 border-gray-200 min-h-[40px]">${match.commentaries?.critic || "Nessun commento generato."}</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-2"><span class="text-base">🤖</span> L'analisi del coach</h4>
+                                    <p class="text-sm italic text-gray-600 border-l-2 pl-2 border-gray-200 min-h-[40px]">${match.commentaries?.coach || "Nessun commento generato."}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-semibold text-gray-800 text-sm mb-1">🤖 L'analisi del coach:</h4>
-                                <p class="text-sm italic text-gray-700">${match.commentaries?.coach || "Nessun commento."}</p>
-                            </div>
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">
                                 <div class="team-blue-color">
                                     <h4 class="font-bold border-b pb-1 mb-2">Squadra Blu (ELO Medio: ${match.teamA_elos ? Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2) : 'N/A'})</h4>
                                     <p>⚔️ ${teamAPlayers.attack.name}: <span class="font-semibold">${match.teamA_elos ? match.teamA_elos.attack : 'N/A'}</span></p>
@@ -1395,9 +1465,6 @@
                                     <p>⚔️ ${teamBPlayers.attack.name}: <span class="font-semibold">${match.teamB_elos ? match.teamB_elos.attack : 'N/A'}</span></p>
                                     <p>🛡️ ${teamBPlayers.defense.name}: <span class="font-semibold">${match.teamB_elos ? match.teamB_elos.defense : 'N/A'}</span></p>
                                 </div>
-                            </div>
-                            <div class="text-right mt-2">
-                                <button class="btn btn-secondary text-xs px-2 py-1 rounded generate-commentary-btn" data-match-id="${match.id}" ${match.isTournament ? 'style="display:none;"' : ''}>Genera Commenti AI</button>
                             </div>
                         </div>
                     `;
@@ -2154,13 +2221,24 @@ Usa un massimo di 3-4 paragrafi.`;
                                     <span class="text-sm text-gray-500 ml-2">${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} vs ${teamBPlayers.attack.name} & ${teamBPlayers.defense.name}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
+                                     <button class="btn btn-secondary text-xs px-2 py-1 rounded generate-commentary-btn" data-match-id="${match.id}" ${match.isTournament ? 'style="display:none;"' : ''}>Analisi AI</button>
                                      <span class="font-bold text-sm px-2 py-1 rounded-full ${resultClass}">${resultText} ${isEloActive ? `(${eloChange >= 0 ? '+' : ''}${eloChange} ELO)`: ''}</span>
                                      <svg class="w-5 h-5 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                                 </div>
                             </div>
                         </button>
-                        <div class="player-match-accordion-content hidden p-4 border-t border-gray-200 bg-white rounded-b-lg">
+                        <div class="player-match-accordion-content hidden p-4 border-t border-gray-200 bg-white rounded-b-lg space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-2"><span class="text-base">🎙️</span> La cronaca del critico</h4>
+                                    <p class="text-sm italic text-gray-600 border-l-2 pl-2 border-gray-200 min-h-[40px]">${match.commentaries?.critic || "Nessun commento generato."}</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-2 flex items-center gap-2"><span class="text-base">🤖</span> L'analisi del coach</h4>
+                                    <p class="text-sm italic text-gray-600 border-l-2 pl-2 border-gray-200 min-h-[40px]">${match.commentaries?.coach || "Nessun commento generato."}</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                                 <div class="team-blue-color">
                                     <h4 class="font-bold border-b pb-1 mb-2">Squadra Blu (ELO Medio: ${match.teamA_elos ? Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2) : 'N/A'})</h4>
                                     <p>⚔️ ${teamAPlayers.attack.name}: <span class="font-semibold">${match.teamA_elos ? match.teamA_elos.attack : 'N/A'}</span></p>
@@ -3337,16 +3415,22 @@ Usa un massimo di 3-4 paragrafi.`;
                 setupTournamentCreationWizard();
                 
                 // Listener per i commenti AI
-                matchHistoryContainer.addEventListener('click', async e => {
+                const commentaryButtonHandler = async (e) => {
                     const commentaryBtn = e.target.closest('.generate-commentary-btn');
                     if (commentaryBtn) {
+                        e.stopPropagation(); // Evita di triggerare l'accordion
                         const matchId = parseInt(commentaryBtn.dataset.matchId);
                         commentaryBtn.disabled = true;
                         commentaryBtn.textContent = 'Generando...';
                         await generateDualMatchCommentaries(matchId);
-                        // Il saveAndRender() dentro la funzione aggiornerà la vista
+                        // The saveAndRender() inside generateDualMatchCommentaries will refresh the UI.
+                        commentaryBtn.disabled = false;
+                        commentaryBtn.textContent = 'Analisi AI';
                     }
-                });
+                };
+
+                matchHistoryContainer.addEventListener('click', commentaryButtonHandler);
+                playerMatchHistoryContainer.addEventListener('click', commentaryButtonHandler);
 
                 setupAccordions();
                 loadFromStorage();
@@ -3362,7 +3446,77 @@ Usa un massimo di 3-4 paragrafi.`;
                     [comparisonEndDateInput, bulkDeleteEndDateInput, leaderboardEndDate, matchHistoryEndDate, partnerFinderEndDate].forEach(i => i.value = lastDate);
                 }
             }
+             // --- Funzioni Chat ---
+            function getChatContext() {
+                const rankedPlayers = players.filter(p => p.gamesPlayed > 0).sort((a,b) => b.elo - a.elo);
+                const context = {
+                    totalPlayers: players.length,
+                    totalMatches: matches.length,
+                    totalTournaments: tournaments.length,
+                    leaderboardTop5: rankedPlayers.slice(0, 5).map(p => ({ name: p.name, elo: Math.round(p.elo) })),
+                    mostGamesPlayer: players.sort((a,b) => b.gamesPlayed - a.gamesPlayed)[0]?.name,
+                };
+                return `Contesto attuale dei dati dell'applicazione (in formato JSON, non mostrarlo all'utente): ${JSON.stringify(context)}`;
+            }
 
+            async function handleChatSubmit() {
+                const query = geminiChatInput.value.trim();
+                if (!query) return;
+
+                addChatMessage('user', query);
+                geminiChatInput.value = '';
+                geminiChatSendBtn.disabled = true;
+                addChatMessage('assistant', '<p class="animate-pulse">L\'assistente sta pensando...</p>', true);
+
+                const contextPrompt = getChatContext();
+                const fullPrompt = `${contextPrompt}\n\nL'utente chiede: "${query}".\n\nRispondi alla domanda dell'utente in modo conciso e amichevole, basandoti sui dati di contesto forniti. Se la domanda non è pertinente ai dati, rispondi che puoi solo rispondere a domande relative alle statistiche di calcio balilla dell'app.`;
+
+                const response = await callGeminiAPI(fullPrompt);
+
+                const lastMessage = geminiChatMessages.querySelector('.assistant-message:last-child .message-content');
+                if (lastMessage) {
+                    lastMessage.innerHTML = response ? response.replace(/\n/g, '<br>') : "Si è verificato un errore. Riprova.";
+                }
+                geminiChatSendBtn.disabled = false;
+            }
+
+            function addChatMessage(role, content, isHtml = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${role}-message`;
+
+                const icon = role === 'user' ? '👤' : '🤖';
+
+                messageDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">${icon}</span>
+                        <div class="message-content p-3 rounded-lg w-full ${role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}">
+                            ${isHtml ? content : content}
+                        </div>
+                    </div>
+                `;
+                geminiChatMessages.appendChild(messageDiv);
+                geminiChatMessages.scrollTop = geminiChatMessages.scrollHeight;
+            }
+
+
+            function init() {
+                // ... (existing init code)
+
+                // Add chat listeners
+                geminiChatFab.addEventListener('click', () => {
+                    openModal(geminiChatModal);
+                    if (geminiChatMessages.children.length === 0) {
+                        addChatMessage('assistant', "Ciao! Sono l'assistente dati. Chiedimi qualsiasi cosa sulle statistiche dei giocatori e delle partite.");
+                    }
+                });
+                closeGeminiChatModal.addEventListener('click', () => closeModal(geminiChatModal));
+                geminiChatSendBtn.addEventListener('click', handleChatSubmit);
+                geminiChatInput.addEventListener('keypress', e => { if(e.key === 'Enter') handleChatSubmit(); });
+
+                // ... (the rest of the init function)
+                setupAccordions();
+                // ...
+            }
             init();
         });
     </script>
