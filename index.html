@@ -160,6 +160,15 @@
         .team.tbd { color: var(--text-muted); font-style: italic; }
         .match-connector { position: absolute; left: 100%; top: 50%; width: 20px; height: 2px; background-color: var(--border-color); }
         .round-connector { position: absolute; left: 100%; top: 25%; width: 2px; height: 50%; background-color: var(--border-color); transform: translateY(50%); }
+        
+        .gemini-commentary {
+            background-color: #f0f4f8; /* Light blue-gray background */
+            border-left: 4px solid var(--team-blue);
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-style: italic;
+            color: #334155;
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -201,6 +210,9 @@
                                 <h3 class="font-bold team-blue-color text-lg">Squadra Blu</h3>
                                 <div class="flex items-center gap-2">
                                     <span class="text-sm font-bold team-blue-color" id="teamAEloDisplay">ELO: -</span>
+                                    <button id="eloInfoBtnA" title="Spiegazione ELO" class="p-1 rounded-full hover:bg-gray-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </button>
                                     <button id="invertRolesABtn" title="Inverti Ruoli" class="p-1 rounded-full hover:bg-gray-200">
                                         <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                                     </button>
@@ -231,6 +243,9 @@
                                 <h3 class="font-bold team-red-color text-lg">Squadra Rossa</h3>
                                  <div class="flex items-center gap-2">
                                     <span class="text-sm font-bold team-red-color" id="teamBEloDisplay">ELO: -</span>
+                                    <button id="eloInfoBtnB" title="Spiegazione ELO" class="p-1 rounded-full hover:bg-gray-200">
+                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </button>
                                     <button id="invertRolesBBtn" title="Inverti Ruoli" class="p-1 rounded-full hover:bg-gray-200">
                                         <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                                     </button>
@@ -247,6 +262,22 @@
                                 </div>
                             </div>
                             <button id="teamAssistantBtn" class="btn btn-secondary w-full mt-2 text-sm">Assistente Squadre...</button>
+                        </div>
+                        
+                        <!-- Punteggio -->
+                        <div>
+                            <h3 class="font-bold text-gray-600 mb-2 text-lg">Punteggio Finale</h3>
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1">
+                                    <label class="role-label text-center team-blue-color">Blu</label>
+                                    <input type="number" id="scoreA" min="0" value="10" class="text-center font-bold text-lg">
+                                </div>
+                                <span class="pt-5 font-bold text-xl">:</span>
+                                 <div class="flex-1">
+                                    <label class="role-label text-center team-red-color">Rossa</label>
+                                    <input type="number" id="scoreB" min="0" value="8" class="text-center font-bold text-lg">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Vincitore -->
@@ -266,6 +297,14 @@
 
                         <!-- Bottone Registra -->
                         <button id="recordMatchBtn" class="btn btn-primary w-full text-lg">Registra Risultato...</button>
+                        
+                         <!-- Commento Pre-Partita AI -->
+                        <div id="preMatchCommentaryContainer" class="hidden border-t pt-4 mt-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                                <span>🎙️</span> Il commento pre-partita
+                            </h3>
+                            <div id="preMatchCommentaryResult" class="gemini-commentary min-h-[80px] flex items-center justify-center"></div>
+                        </div>
                     </div>
                 </div>
                  <!-- Area Messaggi -->
@@ -281,7 +320,6 @@
                         <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div id="leaderboard-card" class="accordion-content hidden pt-4">
-                        <p class="text-sm text-gray-500 -mt-2 mb-4">Clicca su un giocatore per l'analisi</p>
                         <!-- Filtro Classifica -->
                         <div class="flex flex-col sm:flex-row items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
                             <div class="flex items-center gap-4">
@@ -293,6 +331,14 @@
                                 <input type="date" id="leaderboardEndDate" class="text-sm p-1 w-full">
                                 <button id="leaderboardFilterBtn" class="btn btn-primary p-2 text-sm w-full sm:w-auto">Filtra</button>
                             </div>
+                        </div>
+                        
+                         <!-- Commento Classifica AI -->
+                        <div id="leaderboardCommentaryContainer" class="hidden mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                                <span>🎙️</span> La parola al critico
+                            </h3>
+                            <div id="leaderboardCommentaryResult" class="gemini-commentary min-h-[80px] flex items-center justify-center"></div>
                         </div>
 
                         <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg font-bold text-gray-600 text-sm mb-2">
@@ -308,6 +354,7 @@
                                 <svg id="eloSortIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
                         </div>
+                        <p class="text-xs text-gray-500 mb-2">Clicca su un giocatore per l'analisi dettagliata</p>
                         <div id="leaderboard" class="space-y-2"></div>
                     </div>
                 </div>
@@ -453,26 +500,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Sezione Spiegazione Calcolo ELO -->
-        <div class="card mt-8 lg:col-span-3">
-            <button class="accordion-header flex justify-between items-center w-full">
-                 <h2 class="text-2xl font-semibold text-gray-800">Come viene calcolato il punteggio ELO?</h2>
-                 <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </button>
-             <div class="accordion-content hidden pt-4">
-                 <div class="space-y-4 text-gray-600">
-                    <p>Il sistema di valutazione ELO è nato per gli scacchi, ma è perfetto per qualsiasi gioco a due concorrenti. Ecco una spiegazione semplificata di come funziona per le vostre partite 2v2:</p>
-                    <ol class="list-decimal list-inside space-y-3 pl-2">
-                         <li><strong class="text-gray-800">Punto di partenza uguale per tutti:</strong> Ogni nuovo giocatore inizia con un punteggio di <strong>1500 ELO</strong>.</li>
-                        <li><strong class="text-gray-800">Forza della squadra:</strong> Calcoliamo la "forza" di ogni squadra facendo la <strong>media dei punteggi ELO</strong> dei due giocatori (attacco e difesa).</li>
-                        <li><strong class="text-gray-800">Calcolo delle probabilità:</strong> In base alla differenza di ELO, il sistema calcola il risultato atteso.</li>
-                        <li><strong class="text-gray-800">Confronto con la realtà:</strong> Se la squadra sfavorita vince, guadagna <strong>molti punti ELO</strong> e i favoriti ne perdono altrettanti.</li>
-                        <li><strong class="text-gray-800">Aggiornamento individuale:</strong> La variazione di punteggio viene applicata a <strong>entrambi i giocatori</strong> della squadra.</li>
-                    </ol>
-                 </div>
-            </div>
-        </div>
     </div>
 
     <!-- Modal Assistente Pre-Partita -->
@@ -512,18 +539,31 @@
                 </div>
                 <button id="historyFilterBtn" class="btn btn-primary h-fit">Applica Filtro</button>
             </div>
-            <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-4 flex-shrink-0">
-                <nav class="flex space-x-2 -mb-px overflow-x-auto" aria-label="Tabs">
-                    <button id="tabStats" class="modal-tab">📊 Statistiche & Sinergie</button>
-                    <button id="tabChart" class="modal-tab active">📈 Andamento Grafico</button>
-                    <button id="tabHistory" class="modal-tab">📜 Storico Partite</button>
-                    <button id="tabTournaments" class="modal-tab">🏆 Tornei</button>
-                </nav>
-            </div>
 
-            <!-- Tab Content (Scrollable) -->
-            <div class="overflow-y-auto flex-grow">
+            <!-- Contenuto scrollabile del modal -->
+            <div class="overflow-y-auto flex-grow pr-2">
+                <!-- Sezione Analisi AI -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <span>🤖</span> Coach AI
+                    </h3>
+                    <div id="geminiAnalysisContainer" class="gemini-commentary min-h-[100px] flex flex-col justify-center items-center">
+                        <div id="geminiAnalysisResult" class="text-gray-700 w-full"></div>
+                        <p id="geminiLoading" class="hidden text-sm text-gray-500 animate-pulse mt-2">Il coach sta analizzando i dati...</p>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="border-b border-gray-200 mb-4 flex-shrink-0">
+                    <nav class="flex space-x-2 -mb-px overflow-x-auto" aria-label="Tabs">
+                        <button id="tabStats" class="modal-tab">📊 Statistiche & Sinergie</button>
+                        <button id="tabChart" class="modal-tab active">📈 Andamento Grafico</button>
+                        <button id="tabHistory" class="modal-tab">📜 Storico Partite</button>
+                        <button id="tabTournaments" class="modal-tab">🏆 Tornei</button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
                 <div id="tabStatsContent" class="hidden">
                      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 text-center">
                         <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsMatchesPlayed">-</p><p class="text-sm text-gray-600">Partite Giocate</p></div>
@@ -536,18 +576,6 @@
                      <div id="bestSynergyHighlight" class="mb-6"></div>
                      <h3 class="text-xl font-semibold text-gray-800 mb-3">Sinergie Compagni (Dettaglio)</h3>
                      <div id="bestTeammatesContainer" class="space-y-3"></div>
-
-                     <!-- Sezione Analisi AI -->
-                     <div class="border-t pt-4 mt-6">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                            <span>🤖</span> Analisi AI (Gemini)
-                        </h3>
-                        <div id="geminiAnalysisContainer" class="p-4 bg-gray-50 rounded-lg min-h-[100px] flex flex-col justify-center items-center">
-                            <div id="geminiAnalysisResult" class="text-gray-700 w-full"></div>
-                            <button id="generateGeminiBtn" class="btn btn-secondary mt-2">Genera Giudizio</button>
-                             <p id="geminiLoading" class="hidden text-sm text-gray-500 animate-pulse mt-2">Analisi in corso...</p>
-                        </div>
-                     </div>
                 </div>
                 <div id="tabChartContent">
                     <div class="bg-gray-50 p-4 rounded-lg"><canvas id="eloHistoryChart"></canvas></div>
@@ -614,6 +642,19 @@
                     </div>
                 </div>
                 <div id="partnerList" class="space-y-2 max-h-[40vh] overflow-y-auto p-1"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Spiegazione ELO -->
+    <div id="eloExplanationModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="card w-full max-w-2xl transform transition-all">
+             <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Calcolo ELO basato sul Ruolo</h2>
+                <button id="closeEloExplanationModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
+            </div>
+            <div id="eloExplanationContent" class="space-y-4 text-gray-700 max-h-[60vh] overflow-y-auto">
+                 <p class="animate-pulse">Sto chiedendo a Gemini di spiegare il calcolo...</p>
             </div>
         </div>
     </div>
@@ -780,6 +821,8 @@
             const unrankedPlayersCard = document.getElementById('unrankedPlayersCard');
             const messageArea = document.getElementById('messageArea');
             const matchDateInput = document.getElementById('matchDate');
+            const scoreAInput = document.getElementById('scoreA');
+            const scoreBInput = document.getElementById('scoreB');
             const matchHistoryContainer = document.getElementById('matchHistory');
             const exportBtn = document.getElementById('exportBtn');
             const importBtn = document.getElementById('importBtn');
@@ -793,12 +836,16 @@
 
             const teamAEloDisplay = document.getElementById('teamAEloDisplay');
             const teamBEloDisplay = document.getElementById('teamBEloDisplay');
+            const eloInfoBtnA = document.getElementById('eloInfoBtnA');
+            const eloInfoBtnB = document.getElementById('eloInfoBtnB');
+            const eloExplanationModal = document.getElementById('eloExplanationModal');
+            const eloExplanationContent = document.getElementById('eloExplanationContent');
             const teamAssistantBtn = document.getElementById('teamAssistantBtn');
             const invertRolesABtn = document.getElementById('invertRolesABtn');
             const invertRolesBBtn = document.getElementById('invertRolesBBtn');
             const invertTeamsBtn = document.getElementById('invertTeamsBtn');
 
-            // Leaderboard Sorting
+            // Leaderboard Sorting & AI
             const nameSortBtn = document.getElementById('nameSortBtn');
             const nameSortIcon = document.getElementById('nameSortIcon');
             const eloSortBtn = document.getElementById('eloSortBtn');
@@ -808,6 +855,9 @@
             const leaderboardEndDate = document.getElementById('leaderboardEndDate');
             const leaderboardFilterBtn = document.getElementById('leaderboardFilterBtn');
             const rankTypeRadios = document.querySelectorAll('input[name="rankType"]');
+            const leaderboardCommentaryContainer = document.getElementById('leaderboardCommentaryContainer');
+            const leaderboardCommentaryResult = document.getElementById('leaderboardCommentaryResult');
+
 
             // Match History
             const matchSortSelect = document.getElementById('matchSortSelect');
@@ -883,6 +933,8 @@
             const preMatchAssistantModal = document.getElementById('preMatchAssistantModal');
             const wizardActions = document.getElementById('wizardActions');
             const hideWizardCheckbox = document.getElementById('hideWizardCheckbox');
+            const preMatchCommentaryContainer = document.getElementById('preMatchCommentaryContainer');
+            const preMatchCommentaryResult = document.getElementById('preMatchCommentaryResult');
 
             // Sezione Tornei
             const createNewTournamentBtn = document.getElementById('createNewTournamentBtn');
@@ -940,7 +992,7 @@
 
             // Gemini AI Elements
             const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
-            const generateGeminiBtn = document.getElementById('generateGeminiBtn');
+            const geminiAnalysisContainer = document.getElementById('geminiAnalysisContainer');
             const geminiAnalysisResult = document.getElementById('geminiAnalysisResult');
             const geminiLoading = document.getElementById('geminiLoading');
 
@@ -960,6 +1012,8 @@
             let matchHistorySort = 'date_desc';
             let comparisonMode = 'general';
             let fileHandle = null;
+            let cachedEloExplanation = null;
+            let preMatchCommentaryAbortController = null;
             const K_FACTOR = 32;
             const INITIAL_ELO = 1500;
             const CHART_COLORS = ['#148cb4', '#dc3545', '#28a745', '#6f42c1', '#fd7e14', '#20c997', '#ffc107', '#6610f2'];
@@ -982,6 +1036,9 @@
                 modalElement.classList.add('hidden');
                 body.classList.remove('modal-open');
             };
+            // Funzione "cifratura" API Key
+            const encryptKey = (key) => btoa(key);
+            const decryptKey = (encryptedKey) => atob(encryptedKey);
 
             // --- Funzioni Principali ---
 
@@ -989,7 +1046,7 @@
                 messageArea.textContent = text;
                 messageArea.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
                 messageArea.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
-                setTimeout(() => messageArea.classList.add('hidden'), 3000);
+                setTimeout(() => messageArea.classList.add('hidden'), 4000);
             }
 
             function addPlayer() {
@@ -1041,27 +1098,37 @@
                 const teamAPlayers = { attack: getPlayer(parseInt(teamASelects.attack.value)), defense: getPlayer(parseInt(teamASelects.defense.value)) };
                 const teamBPlayers = { attack: getPlayer(parseInt(teamBSelects.attack.value)), defense: getPlayer(parseInt(teamBSelects.defense.value)) };
                 const winner = document.querySelector('input[name="winner"]:checked').value;
+                const scoreA = scoreAInput.value;
+                const scoreB = scoreBInput.value;
 
                 recordSummary.innerHTML = `
                     <p><strong>Data:</strong> ${new Date(matchDateInput.value).toLocaleDateString('it-IT')}</p>
                     <p><strong>Squadra Blu:</strong> ⚔️ ${teamAPlayers.attack.name} & 🛡️ ${teamAPlayers.defense.name}</p>
                     <p><strong>Squadra Rossa:</strong> ⚔️ ${teamBPlayers.attack.name} & 🛡️ ${teamBPlayers.defense.name}</p>
+                    <p><strong>Punteggio:</strong> <span class="font-bold">${scoreA} - ${scoreB}</span></p>
                     <p><strong>Vincitore:</strong> <span class="font-bold ${winner === 'A' ? 'team-blue-color' : 'team-red-color'}">Squadra ${winner === 'A' ? 'Blu' : 'Rossa'}</span></p>
                 `;
                 openModal(confirmRecordModal);
             }
 
-            function recordMatch() {
-                matches.push({
+            async function recordMatch() {
+                const newMatch = {
                     id: Date.now(),
                     date: matchDateInput.value,
                     teamA: { attack: parseInt(teamASelects.attack.value), defense: parseInt(teamASelects.defense.value) },
                     teamB: { attack: parseInt(teamBSelects.attack.value), defense: parseInt(teamBSelects.defense.value) },
+                    scoreA: parseInt(scoreAInput.value),
+                    scoreB: parseInt(scoreBInput.value),
                     winner: document.querySelector('input[name="winner"]:checked').value,
-                });
+                    commentary: null
+                };
+                matches.push(newMatch);
 
                 recalculateAllElos();
-                showMessage("Partita registrata con successo!");
+                showMessage("Partita registrata con successo! Genero il commento AI...");
+                
+                await generateMatchCommentary(newMatch.id);
+
                 saveAndRender();
             }
 
@@ -1100,6 +1167,9 @@
                                 eloChange: match.eloChange,
                                 teamA_elos: match.teamA_elos,
                                 teamB_elos: match.teamB_elos,
+                                // Tornei per ora non hanno punteggio
+                                scoreA: null, 
+                                scoreB: null
                             });
                         }
                     });
@@ -1153,8 +1223,8 @@
 
                     let originalMatch;
                     if (matchData.isTournament) {
-                        const tournamentId = parseInt(matchData.id.split('-')[1]);
-                        const tournament = tournaments.find(t => t.id === tournamentId);
+                        // This part might need adjustment if tournament match IDs are not unique enough
+                        const tournament = tournaments.find(t => t.name === matchData.tournamentName);
                         if (tournament) {
                             originalMatch = tournament.rounds.flat().find(m => `t-${m.id}` === matchData.id);
                         }
@@ -1178,8 +1248,8 @@
                 renderComparisonSelectors();
             }
 
-            function renderPlayers(playerData = null) {
-                if (playerData) { // Vista filtrata della classifica
+            function renderPlayers(playerData = null, fromFilter = false) {
+                 if (playerData) { // Vista filtrata della classifica
                     unrankedPlayersCard.style.display = 'none';
                     const sourcePlayers = playerData;
                     sourcePlayers.sort((a, b) => b.elo - a.elo);
@@ -1197,6 +1267,9 @@
                          playerRow.addEventListener('click', () => openHistoryModal(player.id));
                          leaderboard.appendChild(playerRow);
                     });
+                    if (fromFilter) {
+                        getGeminiAnalysisForLeaderboard(sourcePlayers);
+                    }
                     return;
                 }
 
@@ -1271,37 +1344,40 @@
                      return {...p, elo: Math.round(elo) };
                  });
 
-                 renderPlayers(playersAtDate);
+                 renderPlayers(playersAtDate, true);
             }
 
-            function renderMatches() {
+            function renderMatches(container = matchHistoryContainer, matchesToRender = null) {
                 const startDate = matchHistoryStartDate.value;
                 const endDate = matchHistoryEndDate.value;
-                let allHistoricalMatches = getAllHistoricalMatches();
-
-                let filteredMatches = allHistoricalMatches;
-                if(startDate && endDate) {
-                    filteredMatches = allHistoricalMatches.filter(m => m.date >= startDate && m.date <= endDate);
-                }
-
-                filteredMatches.sort((a, b) => {
-                    const [sortBy, sortOrder] = matchHistorySort.split('_');
-                    if (sortBy === 'date') return sortOrder === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date);
-                    if (sortBy === 'elo') {
-                        const avgEloA = (a.teamA_elos?.attack + a.teamA_elos?.defense + a.teamB_elos?.attack + a.teamB_elos?.defense) / 4 || 0;
-                        const avgEloB = (b.teamA_elos?.attack + b.teamA_elos?.defense + b.teamB_elos?.attack + b.teamB_elos?.defense) / 4 || 0;
-                        return sortOrder === 'desc' ? avgEloB - avgEloA : avgEloA - avgEloB;
+                let allHistoricalMatches = matchesToRender || getAllHistoricalMatches();
+            
+                if (!matchesToRender) { // Only filter if not rendering a specific list (like for bulk delete)
+                    let filteredMatches = allHistoricalMatches;
+                    if (startDate && endDate) {
+                        filteredMatches = allHistoricalMatches.filter(m => m.date >= startDate && m.date <= endDate);
                     }
-                    return 0;
-                });
-
-                matchHistoryContainer.innerHTML = filteredMatches.length ? '' : `<p class="text-gray-500 text-center py-4">Nessuna partita trovata.</p>`;
-
-                filteredMatches.forEach(match => {
+                    allHistoricalMatches = filteredMatches;
+            
+                    allHistoricalMatches.sort((a, b) => {
+                        const [sortBy, sortOrder] = matchHistorySort.split('_');
+                        if (sortBy === 'date') return sortOrder === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date);
+                        if (sortBy === 'elo') {
+                            const avgEloA = (a.teamA_elos?.attack + a.teamA_elos?.defense + a.teamB_elos?.attack + a.teamB_elos?.defense) / 4 || 0;
+                            const avgEloB = (b.teamA_elos?.attack + b.teamA_elos?.defense + b.teamB_elos?.attack + b.teamB_elos?.defense) / 4 || 0;
+                            return sortOrder === 'desc' ? avgEloB - avgEloA : avgEloA - avgEloB;
+                        }
+                        return 0;
+                    });
+                }
+            
+                container.innerHTML = allHistoricalMatches.length ? '' : `<p class="text-gray-500 text-center py-4">Nessuna partita trovata.</p>`;
+            
+                allHistoricalMatches.forEach(match => {
                     const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
                     const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
                     if (!teamAPlayers.attack || !teamBPlayers.attack) return;
-
+            
                     const isEloActive = !match.isTournament || (tournaments.find(t => t.name === match.tournamentName)?.affectsElo ?? false);
                     const eloChangeStringA = (isEloActive && match.eloChange != null) ? (match.winner === 'A' ? `+${Math.round(match.eloChange)}` : `${Math.round(match.eloChange)}`) : 'N/A';
                     const eloChangeStringB = (isEloActive && match.eloChange != null) ? (match.winner === 'B' ? `+${Math.round(-match.eloChange)}` : `${Math.round(-match.eloChange)}`) : 'N/A';
@@ -1309,29 +1385,56 @@
                     const eloChangeClassB = (isEloActive && match.eloChange != null) ? (eloChangeStringB.startsWith('+') ? 'text-green-600' : 'text-red-600') : 'text-gray-400';
                     const matchIcon = match.isTournament ? '🏆' : '🤝';
                     const matchTitle = match.isTournament ? match.tournamentName : 'Partita Amichevole';
-
+            
                     const matchRow = document.createElement('div');
-                    matchRow.className = 'grid grid-cols-1 md:grid-cols-4 items-center gap-2 p-3 bg-gray-50 rounded-lg';
-                     matchRow.innerHTML = `
-                        <div class="text-sm text-gray-600 font-medium">
-                          ${new Date(match.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          <span class="ml-2" title="${matchTitle}">${matchIcon}</span>
-                        </div>
-                        <div class="md:col-span-2 flex flex-col md:flex-row md:items-center justify-center text-center gap-2 md:gap-4 text-sm">
-                            <span class="truncate ${match.winner === 'A' ? 'font-bold team-blue-color' : 'text-gray-500'}">⚔️${teamAPlayers.attack.name} & 🛡️${teamAPlayers.defense.name} <span class="text-xs font-normal ${eloChangeClassA}">(${eloChangeStringA})</span></span>
-                            <span class="text-gray-400 font-bold text-xs">VS</span>
-                            <span class="truncate ${match.winner === 'B' ? 'font-bold team-red-color' : 'text-gray-500'}">⚔️${teamBPlayers.attack.name} & 🛡️${teamBPlayers.defense.name} <span class="text-xs font-normal ${eloChangeClassB}">(${eloChangeStringB})</span></span>
-                        </div>
-                        <div class="flex justify-end items-center">
-                             ${!match.isTournament ? `<button class="btn-danger text-xs px-2 py-1 rounded" data-id="${match.id}">Elimina</button>` : ''}
+                    matchRow.className = 'border border-gray-200 rounded-lg';
+            
+                    let commentaryHTML = '';
+                    if (match.commentary) {
+                        commentaryHTML = `<div class="p-4 border-t border-gray-200 bg-white rounded-b-lg">
+                            <p class="text-sm italic text-gray-700">${match.commentary}</p>
                         </div>`;
-
-                    if (!match.isTournament) {
-                        matchRow.querySelector('button').addEventListener('click', () => openConfirmationModal(match.id));
                     }
-                    matchHistoryContainer.appendChild(matchRow);
+            
+                    matchRow.innerHTML = `
+                        <button class="player-match-accordion-header w-full p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-4 items-center gap-2">
+                                <div class="text-sm text-gray-600 font-medium">
+                                    ${new Date(match.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    <span class="ml-2" title="${matchTitle}">${matchIcon}</span>
+                                </div>
+                                <div class="md:col-span-2 flex flex-col md:flex-row md:items-center justify-center text-center gap-2 md:gap-4 text-sm">
+                                    <span class="truncate ${match.winner === 'A' ? 'font-bold team-blue-color' : 'text-gray-500'}">
+                                        ${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} 
+                                        <span class="font-bold text-lg">${match.scoreA ?? ''}</span>
+                                        <span class="text-xs font-normal ${eloChangeClassA}">(${eloChangeStringA})</span>
+                                    </span>
+                                    <span class="text-gray-400 font-bold text-xs">VS</span>
+                                    <span class="truncate ${match.winner === 'B' ? 'font-bold team-red-color' : 'text-gray-500'}">
+                                        <span class="font-bold text-lg">${match.scoreB ?? ''}</span>
+                                        ${teamBPlayers.attack.name} & ${teamBPlayers.defense.name} 
+                                        <span class="text-xs font-normal ${eloChangeClassB}">(${eloChangeStringB})</span>
+                                    </span>
+                                </div>
+                                <div class="flex justify-end items-center gap-2">
+                                    ${container === matchHistoryContainer && !match.isTournament ? `<button class="btn-danger text-xs px-2 py-1 rounded" data-id="${match.id}">Elimina</button>` : ''}
+                                    <svg class="w-5 h-5 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </div>
+                            </div>
+                        </button>
+                        <div class="player-match-accordion-content hidden">
+                           ${commentaryHTML}
+                        </div>
+                    `;
+            
+                    if (container === matchHistoryContainer && !match.isTournament) {
+                        const deleteBtn = matchRow.querySelector('button[data-id]');
+                        if(deleteBtn) deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); openConfirmationModal(match.id); });
+                    }
+                    container.appendChild(matchRow);
                 });
             }
+
 
             function renderComparisonSelectors() {
                 const sortedPlayers = [...players].sort((a,b) => a.name.localeCompare(b.name));
@@ -1352,29 +1455,73 @@
                 });
             }
 
+            function calculateRoleBasedElo(player, role, allMatches) {
+                 if (!player) return INITIAL_ELO;
+
+                 const roleSpecificMatches = allMatches
+                     .filter(m => (m.teamA[role] === player.id || m.teamB[role] === player.id))
+                     .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                 let roleElo = INITIAL_ELO;
+
+                 roleSpecificMatches.forEach(match => {
+                     const isPlayerInTeamA = match.teamA[role] === player.id;
+                     const partnerRole = role === 'attack' ? 'defense' : 'attack';
+
+                     const teamA_elos = match.teamA_elos;
+                     const teamB_elos = match.teamB_elos;
+
+                     if (!teamA_elos || !teamB_elos) return;
+
+                     const teamAElo = (teamA_elos.attack + teamA_elos.defense) / 2;
+                     const teamBElo = (teamB_elos.attack + teamB_elos.defense) / 2;
+
+                     const expectedScore = 1 / (1 + Math.pow(10, ((isPlayerInTeamA ? teamBElo : teamAElo) - roleElo) / 400));
+                     const actualScore = (isPlayerInTeamA && match.winner === 'A') || (!isPlayerInTeamA && match.winner === 'B') ? 1 : 0;
+                     
+                     const eloChange = K_FACTOR * (actualScore - expectedScore);
+                     roleElo += eloChange;
+                 });
+
+                 return Math.round(roleElo);
+            }
+
             function updateTeamEloDisplays() {
-                const pA_att_id = teamASelects.attack.value;
-                const pA_def_id = teamASelects.defense.value;
+                const allHistoricalMatches = getAllHistoricalMatches();
+                const pA_att_id = parseInt(teamASelects.attack.value);
+                const pA_def_id = parseInt(teamASelects.defense.value);
                 if (pA_att_id && pA_def_id && pA_att_id !== pA_def_id) {
-                    const p1 = getPlayer(parseInt(pA_att_id));
-                    const p2 = getPlayer(parseInt(pA_def_id));
-                    teamAEloDisplay.textContent = `ELO: ${Math.round((p1.elo + p2.elo) / 2)}`;
+                    const p1 = getPlayer(pA_att_id);
+                    const p2 = getPlayer(pA_def_id);
+                    const p1_role_elo = calculateRoleBasedElo(p1, 'attack', allHistoricalMatches);
+                    const p2_role_elo = calculateRoleBasedElo(p2, 'defense', allHistoricalMatches);
+                    teamAEloDisplay.textContent = `ELO: ${Math.round((p1_role_elo + p2_role_elo) / 2)}`;
                 } else {
                     teamAEloDisplay.textContent = 'ELO: -';
                 }
 
-                const pB_att_id = teamBSelects.attack.value;
-                const pB_def_id = teamBSelects.defense.value;
+                const pB_att_id = parseInt(teamBSelects.attack.value);
+                const pB_def_id = parseInt(teamBSelects.defense.value);
                 if (pB_att_id && pB_def_id && pB_att_id !== pB_def_id) {
-                    const p1 = getPlayer(parseInt(pB_att_id));
-                    const p2 = getPlayer(parseInt(pB_def_id));
-                    teamBEloDisplay.textContent = `ELO: ${Math.round((p1.elo + p2.elo) / 2)}`;
+                    const p1 = getPlayer(pB_att_id);
+                    const p2 = getPlayer(pB_def_id);
+                    const p1_role_elo = calculateRoleBasedElo(p1, 'attack', allHistoricalMatches);
+                    const p2_role_elo = calculateRoleBasedElo(p2, 'defense', allHistoricalMatches);
+                    teamBEloDisplay.textContent = `ELO: ${Math.round((p1_role_elo + p2_role_elo) / 2)}`;
                 } else {
                     teamBEloDisplay.textContent = 'ELO: -';
                 }
 
                 teamAssistantBtn.disabled = !((pA_att_id && pA_def_id && pA_att_id !== pA_def_id) || (pB_att_id && pB_def_id && pB_att_id !== pB_def_id));
+                
+                const allPlayerIds = [pA_att_id, pA_def_id, pB_att_id, pB_def_id].filter(id => !isNaN(id));
+                if (new Set(allPlayerIds).size === 4) {
+                    generatePreMatchCommentary();
+                } else {
+                    preMatchCommentaryContainer.classList.add('hidden');
+                }
             }
+
 
             // --- Analisi & Matchmaking ---
             function openTeamAssistantModal() {
@@ -1386,6 +1533,8 @@
 
             function showOpponentProposals() {
                 let referenceTeam = null;
+                const allHistoricalMatches = getAllHistoricalMatches();
+
                 let p_att_id = parseInt(teamASelects.attack.value);
                 let p_def_id = parseInt(teamASelects.defense.value);
 
@@ -1406,15 +1555,17 @@
                 }
 
                 if(!referenceTeam) {
-                     assistantOpponentsContent.innerHTML = `<p class="text-center text-gray-500 py-4">Seleziona una squadra completa (Blu o Rossa) per trovare avversari.</p>`;
+                     opponentPairsList.innerHTML = `<p class="text-center text-gray-500 py-4">Seleziona una squadra completa (Blu o Rossa) per trovare avversari.</p>`;
                      return;
                 }
 
-                const teamElo = (referenceTeam.attack.elo + referenceTeam.defense.elo) / 2;
+                const ref_att_elo = calculateRoleBasedElo(referenceTeam.attack, 'attack', allHistoricalMatches);
+                const ref_def_elo = calculateRoleBasedElo(referenceTeam.defense, 'defense', allHistoricalMatches);
+                const teamElo = (ref_att_elo + ref_def_elo) / 2;
 
                 const availablePlayers = players.filter(p => p.id !== referenceTeam.attack.id && p.id !== referenceTeam.defense.id);
                 if (availablePlayers.length < 2) {
-                    assistantOpponentsContent.innerHTML = `<p class="text-center text-gray-500 py-4">Non ci sono abbastanza giocatori per formare una squadra avversaria.</p>`;
+                    opponentPairsList.innerHTML = `<p class="text-center text-gray-500 py-4">Non ci sono abbastanza giocatori per formare una squadra avversaria.</p>`;
                     return;
                 };
 
@@ -1424,19 +1575,24 @@
                         if (i === j) continue;
                         const p_att = availablePlayers[i];
                         const p_def = availablePlayers[j];
+                        
+                        const p_att_role_elo = calculateRoleBasedElo(p_att, 'attack', allHistoricalMatches);
+                        const p_def_role_elo = calculateRoleBasedElo(p_def, 'defense', allHistoricalMatches);
 
-                        opponentPairs.push({ attack: p_att, defense: p_def, avgElo: (p_att.elo + p_def.elo) / 2 });
+                        opponentPairs.push({ attack: p_att, defense: p_def, avgElo: (p_att_role_elo + p_def_role_elo) / 2 });
                     }
                 }
 
+                const uniquePairs = opponentPairs.filter((pair, index, self) =>
+                    index === self.findIndex(p => p.attack.id === pair.attack.id && p.defense.id === pair.defense.id)
+                );
+                
                 const proposals = {
-                    "🏆 La Partita Equilibrata": { pair: [...opponentPairs].sort((a,b) => Math.abs(a.avgElo - teamElo) - Math.abs(b.avgElo - teamElo))[0], desc: "La sfida più bilanciata sulla carta. L'esito è incerto." },
-                    "⚔️ Scontro tra Titani": { pair: [...opponentPairs].sort((a, b) => b.avgElo - a.avgElo)[0], desc: "Affronta la coppia con l'ELO combinato più alto." },
-                    "🛡️ Attacco vs Difesa": { pair: [...opponentPairs].sort((a,b) => Math.abs((b.attack.elo - b.defense.elo) - (referenceTeam.attack.elo - referenceTeam.defense.elo)))[0], desc: "Uno scontro di stili, contro una coppia dal bilanciamento opposto." },
-                    "🎭 La Sfida Speculare": { pair: [...opponentPairs].sort((a,b) => (Math.abs(a.attack.elo - referenceTeam.attack.elo) + Math.abs(a.defense.elo - referenceTeam.defense.elo)) - (Math.abs(b.attack.elo - referenceTeam.attack.elo) + Math.abs(b.defense.elo - referenceTeam.defense.elo)))[0], desc: "Competi contro una squadra con un profilo di ELO simile." }
+                    "🏆 La Partita Equilibrata": { pair: [...uniquePairs].sort((a,b) => Math.abs(a.avgElo - teamElo) - Math.abs(b.avgElo - teamElo))[0], desc: "La sfida più bilanciata sulla carta, basata sull'ELO specifico per ruolo." },
+                    "⚔️ Scontro tra Titani": { pair: [...uniquePairs].sort((a, b) => b.avgElo - a.avgElo)[0], desc: "Affronta la coppia con l'ELO combinato per ruolo più alto." },
                 };
 
-                assistantOpponentsContent.innerHTML = '';
+                opponentPairsList.innerHTML = '';
                 Object.entries(proposals).forEach(([title, data]) => {
                     const {pair, desc} = data;
                     if (!pair) return; // Salta se non è possibile generare una coppia
@@ -1456,10 +1612,10 @@
                             </div>
                         </div>
                         <div class="mt-3 text-sm font-semibold">
-                            <span>⚔️ ${pair.attack.name} (${Math.round(pair.attack.elo)})</span> &
-                            <span>🛡️ ${pair.defense.name} (${Math.round(pair.defense.elo)})</span>
+                            <span>⚔️ ${pair.attack.name}</span> &
+                            <span>🛡️ ${pair.defense.name}</span>
                         </div>`;
-                    assistantOpponentsContent.appendChild(card);
+                    opponentPairsList.appendChild(card);
                 });
             }
 
@@ -1476,9 +1632,11 @@
                 const player = getPlayer(playerId);
                 const partnerRole = playerRole === 'attack' ? 'defense' : 'attack';
                 const availablePartners = players.filter(p => p.id !== playerId);
+                const allHistoricalMatches = getAllHistoricalMatches();
+
 
                 const rankedPartners = availablePartners.map(partner => {
-                    const duoMatches = matches.filter(m => {
+                    const duoMatches = allHistoricalMatches.filter(m => {
                         const inPeriod = (!startDate || !endDate) || (m.date >= startDate && m.date <= endDate);
                         if (!inPeriod) return false;
 
@@ -1490,7 +1648,9 @@
                     });
 
                     if (duoMatches.length === 0) {
-                        return { partner, matches: 0, wins: 0, medianElo: (player.elo + partner.elo) / 2, basedOn: 'elo' };
+                        const playerElo = calculateRoleBasedElo(player, playerRole, allHistoricalMatches);
+                        const partnerElo = calculateRoleBasedElo(partner, partnerRole, allHistoricalMatches);
+                        return { partner, matches: 0, wins: 0, medianElo: (playerElo + partnerElo) / 2, basedOn: 'elo' };
                     }
 
                     const wins = duoMatches.filter(m => {
@@ -1501,8 +1661,9 @@
                     const teamElos = duoMatches.map(m => {
                          const inTeamA = m.teamA[playerRole] === player.id;
                          const elos = inTeamA ? m.teamA_elos : m.teamB_elos;
+                         if(!elos) return 0;
                          return (elos.attack + elos.defense) / 2;
-                    });
+                    }).filter(e => e > 0);
 
                     return { partner, matches: duoMatches.length, wins, medianElo: calculateMedian(teamElos), basedOn: 'performance' };
                 }).sort((a, b) => b.medianElo - a.medianElo);
@@ -1550,6 +1711,7 @@
 
                 switchTab('chart');
                 updateAllPlayerData();
+                getGeminiAnalysisForPlayer();
                 openModal(historyModal);
             }
 
@@ -1566,6 +1728,7 @@
                 renderPlayerMatchHistory();
                 renderPlayerStats();
                 renderPlayerTournaments();
+                // Il giudizio AI viene aggiornato dal filtro data
             }
 
             function renderSingleHistoryChart() {
@@ -1676,7 +1839,7 @@
 
                 statsBestRole.textContent = stats.bestRole === 'Indifferente' ? '-' : stats.bestRole === 'Attacco' ? '⚔️ Attacco' : '🛡️ Difesa';
 
-                // Teammate Synergy Analysis (this part is complex and better left as is for display)
+                // Teammate Synergy Analysis
                 const teammateStats = {};
                 playerMatches.forEach(match => {
                     const isPlayerInTeamA = match.teamA.attack === player.id || match.teamA.defense === player.id;
@@ -1754,59 +1917,21 @@
                         </div>`;
                     bestTeammatesContainer.appendChild(row);
                 });
-
-                // Clear previous Gemini results when stats are re-rendered
-                geminiAnalysisResult.innerHTML = "Clicca \"Genera Giudizio\" per un parere dall'IA.";
-                generateGeminiBtn.classList.remove('hidden');
-                geminiLoading.classList.add('hidden');
             }
 
-            async function getGeminiAnalysis() {
-                const apiKey = localStorage.getItem('geminiApiKey');
-                if (!apiKey) {
-                    showMessage("Per favore, inserisci la tua API Key di Gemini nella sezione 'Gestione Dati'.", true);
-                    // This logic attempts to find and open the accordion, which is a nice-to-have.
-                    try {
-                        let dataAccordionHeader = null;
-                        document.querySelectorAll('h2').forEach(h2 => {
-                            if(h2.textContent.trim() === 'Gestione Dati') {
-                                dataAccordionHeader = h2.parentElement;
-                            }
-                        });
-                        if(dataAccordionHeader && dataAccordionHeader.nextElementSibling.classList.contains('hidden')) {
-                           dataAccordionHeader.click();
-                        }
-                    } catch(e) { console.error("Could not auto-open accordion", e); }
-                    geminiApiKeyInput.focus();
-                    return;
-                }
-
-                const player = getPlayer(currentlyViewingPlayerId);
-                const startDate = historyStartDateInput.value;
-                const endDate = historyEndDateInput.value;
-                const stats = getPlayerStatsForPeriod(currentlyViewingPlayerId, startDate, endDate);
-
-                if (stats.matchesPlayed < 3) {
-                    showMessage("Sono necessarie almeno 3 partite nel periodo selezionato per un'analisi significativa.", true);
-                    return;
-                }
-
-                geminiLoading.classList.remove('hidden');
-                generateGeminiBtn.classList.add('hidden');
-                geminiAnalysisResult.innerHTML = '';
-
-                let prompt = `Sei un'analista esperto di calcio balilla. Analizza la performance del giocatore ${player.name} nel periodo dal ${new Date(startDate).toLocaleDateString('it-IT')} al ${new Date(endDate).toLocaleDateString('it-IT')}. Fornisci un giudizio conciso (massimo 3-4 frasi) sulle sue performance, evidenziando i punti di forza e di debolezza. Sii diretto e usa un tono da coach.
-
-I suoi dati nel periodo sono:
-- Partite giocate: ${stats.matchesPlayed}
-- Percentuale di vittorie: ${stats.winRate.toFixed(1)}%
-- Variazione ELO: ${stats.eloChange >= 0 ? '+' : ''}${stats.eloChange.toFixed(0)}
-- Tasso di vittoria in attacco: ${stats.attackWinRate > 0 ? stats.attackWinRate.toFixed(1) + '%' : 'N/A'}
-- Tasso di vittoria in difesa: ${stats.defenseWinRate > 0 ? stats.defenseWinRate.toFixed(1) + '%' : 'N/A'}
-- Ruolo migliore (basato su win-rate): ${stats.bestRole}`;
-
-                if(stats.bestTeammate) {
-                    prompt += `\n- Migliore sinergia con: ${stats.bestTeammate.name} (${stats.bestTeammate.winRate.toFixed(1)}% di vittorie in ${stats.bestTeammate.matches} partite)`
+            async function callGeminiAPI(prompt, containerElement) {
+                let apiKey = '';
+                try {
+                    const encryptedKey = localStorage.getItem('geminiApiKey');
+                    if (encryptedKey) {
+                        apiKey = decryptKey(encryptedKey);
+                    } else {
+                        throw new Error("API Key non trovata.");
+                    }
+                } catch (e) {
+                     showMessage("API Key non trovata o non valida. Inseriscila nella Gestione Dati.", true);
+                     containerElement.innerHTML = `<p class="text-red-500">API Key di Gemini non configurata.</p>`;
+                     return null;
                 }
 
                 try {
@@ -1816,10 +1941,10 @@ I suoi dati nel periodo sono:
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: prompt }] }],
                             generationConfig: {
-                                temperature: 0.4,
+                                temperature: 0.5,
                                 topK: 1,
                                 topP: 1,
-                                maxOutputTokens: 256,
+                                maxOutputTokens: 8192,
                             },
                         }),
                     });
@@ -1833,27 +1958,166 @@ I suoi dati nel periodo sono:
                     const candidate = data.candidates?.[0];
 
                     if (candidate && candidate.content?.parts?.[0]?.text) {
-                        const text = candidate.content.parts[0].text;
-                        geminiAnalysisResult.innerHTML = text.replace(/\n/g, '<br>');
+                        return candidate.content.parts[0].text;
                     } else {
                         const finishReason = candidate?.finishReason;
-                        let errorMessage = "La risposta dell'API non contiene testo o ha un formato inatteso.";
-                        if (finishReason === 'SAFETY') {
-                            errorMessage = "La risposta è stata bloccata per motivi di sicurezza.";
-                        } else if (finishReason) {
-                           errorMessage = `Generazione interrotta per motivo: ${finishReason}.`;
+                        let errorMessage = "La risposta dell'API non contiene testo.";
+                        if (finishReason) {
+                           errorMessage = `Generazione interrotta per motivo: ${finishReason}. Prova ad aumentare i token massimi se il problema persiste.`;
                         }
                         throw new Error(errorMessage);
                     }
-
                 } catch (error) {
-                    showMessage(`Errore analisi AI: ${error.message}`, true);
-                    geminiAnalysisResult.textContent = "Impossibile generare l'analisi.";
-                    generateGeminiBtn.classList.remove('hidden');
-                } finally {
-                    geminiLoading.classList.add('hidden');
+                    showMessage(`Errore Gemini: ${error.message}`, true);
+                    containerElement.innerHTML = `<p class="text-red-500">Errore durante la generazione della risposta AI.</p>`;
+                    return null;
                 }
             }
+            
+            async function getGeminiAnalysisForPlayer() {
+                geminiLoading.classList.remove('hidden');
+                geminiAnalysisResult.innerHTML = '';
+            
+                const player = getPlayer(currentlyViewingPlayerId);
+                const startDate = historyStartDateInput.value;
+                const endDate = historyEndDateInput.value;
+                const stats = getPlayerStatsForPeriod(currentlyViewingPlayerId, startDate, endDate);
+            
+                if (stats.matchesPlayed < 1) {
+                    geminiAnalysisResult.innerHTML = "Non ci sono abbastanza dati in questo periodo per un'analisi del coach.";
+                    geminiLoading.classList.add('hidden');
+                    return;
+                }
+            
+                let prompt = `Sei un coach di calcio balilla esigente ma giusto. Il tuo compito è analizzare la performance del giocatore ${player.name} nel periodo dal ${new Date(startDate).toLocaleDateString('it-IT')} al ${new Date(endDate).toLocaleDateString('it-IT')} e dargli un feedback diretto, come se stessi parlando con lui. Sii buono quando serve, ma non esitare a essere critico e a spronarlo se i dati lo suggeriscono. Concludi sempre con un consiglio pratico per migliorare. Scrivi un paragrafo conciso.
+
+Dati del giocatore nel periodo:
+- Partite giocate: ${stats.matchesPlayed}
+- Percentuale di vittorie: ${stats.winRate.toFixed(1)}%
+- Variazione ELO: ${stats.eloChange >= 0 ? '+' : ''}${stats.eloChange.toFixed(0)}
+- Tasso di vittoria in attacco: ${stats.attackWinRate > 0 ? stats.attackWinRate.toFixed(1) + '%' : 'N/A'}
+- Tasso di vittoria in difesa: ${stats.defenseWinRate > 0 ? stats.defenseWinRate.toFixed(1) + '%' : 'N/A'}
+- Ruolo migliore (basato su win-rate): ${stats.bestRole}`;
+            
+                if(stats.bestTeammate) {
+                    prompt += `\n- Migliore sinergia con: ${stats.bestTeammate.name} (${stats.bestTeammate.winRate.toFixed(1)}% di vittorie in ${stats.bestTeammate.matches} partite)`
+                }
+            
+                const text = await callGeminiAPI(prompt, geminiAnalysisResult);
+                if (text) {
+                    geminiAnalysisResult.innerHTML = text.replace(/\n/g, '<br>');
+                }
+                geminiLoading.classList.add('hidden');
+            }
+            
+            async function getGeminiAnalysisForLeaderboard(filteredPlayers) {
+                leaderboardCommentaryContainer.classList.remove('hidden');
+                leaderboardCommentaryResult.innerHTML = `<p class="animate-pulse">Il critico sta affilando la penna...</p>`;
+                
+                const startDate = leaderboardStartDate.value;
+                const endDate = leaderboardEndDate.value;
+
+                const topPlayersSummary = filteredPlayers.slice(0, 5).map((p, index) => `${index + 1}. ${p.name} (ELO: ${p.elo})`).join('\n');
+
+                const prompt = `Sei un critico sportivo di calcio sagace e con un occhio per il dettaglio. Analizza la classifica dei giocatori di calcio balilla per il periodo dal ${new Date(startDate).toLocaleDateString('it-IT')} al ${new Date(endDate).toLocaleDateString('it-IT')}. La classifica attuale (top 5) è:\n${topPlayersSummary}\n\nScrivi un breve commento (2-3 frasi) in stile giornalistico, evidenziando chi sta dominando, eventuali sorprese o chi sta deludendo. Usa un linguaggio evocativo e da cronaca sportiva.`;
+                
+                const text = await callGeminiAPI(prompt, leaderboardCommentaryResult);
+                if (text) {
+                    leaderboardCommentaryResult.innerHTML = text.replace(/\n/g, '<br>');
+                }
+            }
+            
+            async function generateMatchCommentary(matchId) {
+                const match = matches.find(m => m.id === matchId);
+                if (!match) return;
+
+                const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
+                const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
+
+                let prompt = `Sei un critico sportivo di calcio. Commenta la seguente partita di calcio balilla, terminata in data ${new Date(match.date).toLocaleDateString('it-IT')}. Sii incisivo e professionale.
+
+Dettagli Partita:
+- Squadra Blu: Attacco ${teamAPlayers.attack.name}, Difesa ${teamAPlayers.defense.name}
+- Squadra Rossa: Attacco ${teamBPlayers.attack.name}, Difesa ${teamBPlayers.defense.name}
+- Risultato Finale: Blu ${match.scoreA} - ${match.scoreB} Rossa
+- Vincitore: Squadra ${match.winner === 'A' ? 'Blu' : 'Rossa'}
+- Variazione ELO per i vincitori: +${Math.abs(Math.round(match.eloChange))}, per gli sconfitti: ${Math.round(match.eloChange) > 0 ? -Math.round(match.eloChange) : Math.round(match.eloChange)}
+`;
+
+                if (match.scoreA === null || match.scoreB === null) {
+                    prompt += "\nNota: Il punteggio dettagliato non è stato registrato, basa il commento solo sulla performance ELO e sulla reputazione dei giocatori.";
+                }
+
+                prompt += "\nScrivi un breve paragrafo di commento sulla partita.";
+                
+                // Non c'è un elemento UI specifico per questo, quindi l'errore verrà mostrato solo nel popup.
+                const text = await callGeminiAPI(prompt, { innerHTML: '' });
+                if (text) {
+                    match.commentary = text;
+                    showMessage("Commento AI generato!", false);
+                } else {
+                    match.commentary = "Generazione commento fallita.";
+                     showMessage("Generazione commento fallita.", true);
+                }
+            }
+
+            async function generatePreMatchCommentary() {
+                if (preMatchCommentaryAbortController) {
+                    preMatchCommentaryAbortController.abort();
+                }
+                preMatchCommentaryAbortController = new AbortController();
+                const signal = preMatchCommentaryAbortController.signal;
+
+                preMatchCommentaryContainer.classList.remove('hidden');
+                preMatchCommentaryResult.innerHTML = `<p class="animate-pulse">Il critico sta studiando le formazioni...</p>`;
+
+                const allHistoricalMatches = getAllHistoricalMatches();
+                const pA_att = getPlayer(parseInt(teamASelects.attack.value));
+                const pA_def = getPlayer(parseInt(teamASelects.defense.value));
+                const pB_att = getPlayer(parseInt(teamBSelects.attack.value));
+                const pB_def = getPlayer(parseInt(teamBSelects.defense.value));
+
+                const teamA_elo = Math.round((calculateRoleBasedElo(pA_att, 'attack', allHistoricalMatches) + calculateRoleBasedElo(pA_def, 'defense', allHistoricalMatches)) / 2);
+                const teamB_elo = Math.round((calculateRoleBasedElo(pB_att, 'attack', allHistoricalMatches) + calculateRoleBasedElo(pB_def, 'defense', allHistoricalMatches)) / 2);
+
+                const prompt = `Sei un critico sportivo di calcio, famoso per le tue analisi pre-partita. Analizza la sfida imminente tra queste due squadre di calcio balilla.
+
+- Squadra Blu: Attacco ${pA_att.name}, Difesa ${pA_def.name}. ELO di squadra calcolato per ruolo: ${teamA_elo}.
+- Squadra Rossa: Attacco ${pB_att.name}, Difesa ${pB_def.name}. ELO di squadra calcolato per ruolo: ${teamB_elo}.
+
+Sulla base di questi dati e della forza percepita dei giocatori, scrivi un breve commento pre-partita (2-3 frasi), indicando chi vedi come favorito e perché.`;
+                
+                 const text = await callGeminiAPI(prompt, preMatchCommentaryResult);
+                 if (signal.aborted) return;
+
+                 if (text) {
+                     preMatchCommentaryResult.innerHTML = text.replace(/\n/g, '<br>');
+                 }
+            }
+
+            async function getEloExplanation() {
+                if (cachedEloExplanation) {
+                    eloExplanationContent.innerHTML = cachedEloExplanation;
+                    openModal(eloExplanationModal);
+                    return;
+                }
+                
+                openModal(eloExplanationModal);
+
+                const prompt = `Spiega in modo semplice e discorsivo, come se stessi parlando a un appassionato, come funziona il calcolo del punteggio ELO per le squadre di calcio balilla in questa applicazione. Includi i seguenti punti:
+1.  Il punteggio ELO non è statico, ma viene calcolato dinamicamente per ogni giocatore in base al suo ruolo (attacco o difesa) in quella partita.
+2.  Si analizza lo storico delle partite di un giocatore in un determinato ruolo per stimare la sua forza in quella posizione.
+3.  La forza della squadra è la media degli ELO basati sul ruolo dei due giocatori.
+4.  Questo permette di avere una stima più precisa della forza di una squadra, perché un giocatore potrebbe essere un fenomeno in attacco ma mediocre in difesa, e il sistema ne tiene conto.
+Usa un massimo di 3-4 paragrafi.`;
+
+                const text = await callGeminiAPI(prompt, eloExplanationContent);
+                if (text) {
+                    cachedEloExplanation = text.replace(/\n/g, '<br><br>');
+                    eloExplanationContent.innerHTML = cachedEloExplanation;
+                }
+            }
+
 
             function renderPlayerMatchHistory() {
                 const player = getPlayer(currentlyViewingPlayerId);
@@ -2145,6 +2409,14 @@ I suoi dati nel periodo sono:
                     });
                 });
 
+                matchHistoryContainer.addEventListener('click', e => {
+                    const header = e.target.closest('.player-match-accordion-header');
+                    if (header) {
+                        header.nextElementSibling.classList.toggle('hidden');
+                        header.querySelector('svg').classList.toggle('rotate-180');
+                    }
+                });
+
                 playerMatchHistoryContainer.addEventListener('click', e => {
                     const header = e.target.closest('.player-match-accordion-header');
                     if (header) {
@@ -2242,6 +2514,20 @@ I suoi dati nel periodo sono:
                 const storedState = localStorage.getItem('foosballEloTracker');
                 if (storedState) {
                    loadData(JSON.parse(storedState));
+                }
+                 // Gestione API Key
+                const storedApiKey = localStorage.getItem('geminiApiKey');
+                if (storedApiKey) {
+                    try {
+                        geminiApiKeyInput.value = decryptKey(storedApiKey);
+                    } catch (e) {
+                        localStorage.removeItem('geminiApiKey'); // Rimuovi se corrotta
+                    }
+                } else {
+                    // Imposta e salva la chiave di default se non ce n'è una
+                    const defaultKey = "AIzaSyBewWaDDMlKpkQOT_4vFGrElqYWV61YU7c";
+                    geminiApiKeyInput.value = defaultKey;
+                    localStorage.setItem('geminiApiKey', encryptKey(defaultKey));
                 }
             }
 
@@ -2825,16 +3111,19 @@ I suoi dati nel periodo sono:
                     });
                 }
 
-                geminiApiKeyInput.value = localStorage.getItem('geminiApiKey') || '';
-                geminiApiKeyInput.addEventListener('input', (e) => {
-                    localStorage.setItem('geminiApiKey', e.target.value.trim());
+                geminiApiKeyInput.addEventListener('change', (e) => {
+                    const key = e.target.value.trim();
+                    if(key) {
+                        localStorage.setItem('geminiApiKey', encryptKey(key));
+                    } else {
+                        localStorage.removeItem('geminiApiKey');
+                    }
                 });
 
                 matchDateInput.value = new Date().toISOString().split('T')[0];
                 addPlayerBtn.addEventListener('click', addPlayer);
                 playerNameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer(); });
                 recordMatchBtn.addEventListener('click', preRecordMatch);
-                generateGeminiBtn.addEventListener('click', getGeminiAnalysis);
 
                 const setupSortButton = (btn, icon, sortBy) => {
                     btn.addEventListener('click', () => {
@@ -2864,7 +3153,10 @@ I suoi dati nel periodo sono:
                 // --- Event Listeners per Modals ---
                 closeHistoryModalBtn.addEventListener('click', () => closeModal(historyModal));
                 historyModal.addEventListener('click', e => { if(e.target === historyModal) closeModal(historyModal); });
-                historyFilterBtn.addEventListener('click', updateAllPlayerData);
+                historyFilterBtn.addEventListener('click', () => {
+                    updateAllPlayerData();
+                    getGeminiAnalysisForPlayer();
+                });
                 Object.values(playerAnalysisTabs).forEach(tab => tab.addEventListener('click', () => switchTab(tab.id.replace('tab', '').toLowerCase())));
                 playerMatchSortSelect.addEventListener('change', renderPlayerMatchHistory);
 
@@ -2936,6 +3228,9 @@ I suoi dati nel periodo sono:
                     playerIdToDelete = null;
                 });
                 confirmPlayerDeleteBtn.addEventListener('click', deletePlayer);
+                
+                [eloInfoBtnA, eloInfoBtnB].forEach(btn => btn.addEventListener('click', getEloExplanation));
+                document.getElementById('closeEloExplanationModal').addEventListener('click', () => closeModal(eloExplanationModal));
 
                 bulkDeleteBtn.addEventListener('click', handleBulkDeletePreview);
                 cancelBulkDeleteBtn.addEventListener('click', () => closeModal(confirmBulkDeleteModal));
@@ -2956,6 +3251,7 @@ I suoi dati nel periodo sono:
                 rankTypeRadios.forEach(radio => radio.addEventListener('change', (e) => {
                     const isPeriod = e.target.value === 'period';
                     leaderboardDateFilters.classList.toggle('hidden', !isPeriod);
+                    leaderboardCommentaryContainer.classList.add('hidden');
                     if (!isPeriod) renderPlayers(); // Reset to overall if switched back
                 }));
                 leaderboardFilterBtn.addEventListener('click', handleLeaderboardFilter);
@@ -3023,4 +3319,3 @@ I suoi dati nel periodo sono:
     </script>
 </body>
 </html>
-
