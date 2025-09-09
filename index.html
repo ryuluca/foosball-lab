@@ -270,12 +270,12 @@
                             <div class="flex items-center gap-4">
                                 <div class="flex-1">
                                     <label class="role-label text-center team-blue-color">Blu</label>
-                                    <input type="number" id="scoreA" min="0" value="10" class="text-center font-bold text-lg">
+                                    <input type="number" id="scoreA" min="0" value="0" class="text-center font-bold text-lg">
                                 </div>
                                 <span class="pt-5 font-bold text-xl">:</span>
                                  <div class="flex-1">
                                     <label class="role-label text-center team-red-color">Rossa</label>
-                                    <input type="number" id="scoreB" min="0" value="8" class="text-center font-bold text-lg">
+                                    <input type="number" id="scoreB" min="0" value="0" class="text-center font-bold text-lg">
                                 </div>
                             </div>
                         </div>
@@ -285,7 +285,7 @@
                             <h3 class="font-bold text-gray-600 mb-2 text-lg">Vincitore</h3>
                             <div class="flex items-center space-x-2 rounded-lg bg-gray-100 p-1">
                                 <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-[--team-blue] has-[:checked]:text-white has-[:checked]:shadow-md">
-                                    <input type="radio" name="winner" value="A" class="sr-only" checked>
+                                    <input type="radio" name="winner" value="A" class="sr-only">
                                     <span>Squadra Blu</span>
                                 </label>
                                 <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-colors has-[:checked]:bg-[--team-red] has-[:checked]:text-white has-[:checked]:shadow-md">
@@ -823,6 +823,7 @@
             const matchDateInput = document.getElementById('matchDate');
             const scoreAInput = document.getElementById('scoreA');
             const scoreBInput = document.getElementById('scoreB');
+            const winnerRadios = document.querySelectorAll('input[name="winner"]');
             const matchHistoryContainer = document.getElementById('matchHistory');
             const exportBtn = document.getElementById('exportBtn');
             const importBtn = document.getElementById('importBtn');
@@ -1095,11 +1096,25 @@
                 if (playerIds.some(id => id === '')) return showMessage("Seleziona un giocatore per ogni ruolo.", true);
                 if (new Set(playerIds).size !== 4) return showMessage("Ogni giocatore può essere selezionato una sola volta.", true);
 
+                const scoreA = parseInt(scoreAInput.value);
+                const scoreB = parseInt(scoreBInput.value);
+
+                if (scoreA === scoreB) {
+                    return showMessage("Una partita non può finire in pareggio.", true);
+                }
+                
+                if (isNaN(scoreA) || isNaN(scoreB)) {
+                    return showMessage("Inserisci un punteggio valido.", true);
+                }
+                
+                const winnerRadio = document.querySelector('input[name="winner"]:checked');
+                if (!winnerRadio) {
+                    return showMessage("Seleziona un vincitore.", true);
+                }
+
                 const teamAPlayers = { attack: getPlayer(parseInt(teamASelects.attack.value)), defense: getPlayer(parseInt(teamASelects.defense.value)) };
                 const teamBPlayers = { attack: getPlayer(parseInt(teamBSelects.attack.value)), defense: getPlayer(parseInt(teamBSelects.defense.value)) };
-                const winner = document.querySelector('input[name="winner"]:checked').value;
-                const scoreA = scoreAInput.value;
-                const scoreB = scoreBInput.value;
+                const winner = winnerRadio.value;
 
                 recordSummary.innerHTML = `
                     <p><strong>Data:</strong> ${new Date(matchDateInput.value).toLocaleDateString('it-IT')}</p>
@@ -1120,14 +1135,14 @@
                     scoreA: parseInt(scoreAInput.value),
                     scoreB: parseInt(scoreBInput.value),
                     winner: document.querySelector('input[name="winner"]:checked').value,
-                    commentary: null
+                    commentaries: { critic: null, coach: null }
                 };
                 matches.push(newMatch);
 
                 recalculateAllElos();
-                showMessage("Partita registrata con successo! Genero il commento AI...");
+                showMessage("Partita registrata con successo! Genero i commenti AI...");
                 
-                await generateMatchCommentary(newMatch.id);
+                await generateDualMatchCommentaries(newMatch.id);
 
                 saveAndRender();
             }
@@ -1167,9 +1182,9 @@
                                 eloChange: match.eloChange,
                                 teamA_elos: match.teamA_elos,
                                 teamB_elos: match.teamB_elos,
-                                // Tornei per ora non hanno punteggio
                                 scoreA: null, 
-                                scoreB: null
+                                scoreB: null,
+                                commentaries: { critic: null, coach: null }
                             });
                         }
                     });
@@ -1249,43 +1264,24 @@
             }
 
             function renderPlayers(playerData = null, fromFilter = false) {
-                 if (playerData) { // Vista filtrata della classifica
-                    unrankedPlayersCard.style.display = 'none';
-                    const sourcePlayers = playerData;
-                    sourcePlayers.sort((a, b) => b.elo - a.elo);
-
-                    leaderboard.innerHTML = sourcePlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Nessun giocatore trovato nel periodo.</p>`;
-                    sourcePlayers.forEach((player, index) => {
-                         const playerRow = document.createElement('div');
-                         playerRow.className = `flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer`;
-                         playerRow.innerHTML = `
-                            <div class="flex items-center gap-4">
-                                <span class="font-bold text-lg w-8 text-center">${index + 1}</span>
-                                <span class="text-lg font-medium text-gray-800">${player.name}</span>
-                            </div>
-                            <span class="font-bold text-lg" style="color: var(--team-blue)">${Math.round(player.elo)}</span>`;
-                         playerRow.addEventListener('click', () => openHistoryModal(player.id));
-                         leaderboard.appendChild(playerRow);
+                const isOverall = !playerData;
+                const sourcePlayers = playerData || players.filter(p => p.gamesPlayed > 0);
+                 
+                if (isOverall) {
+                    unrankedPlayersCard.style.display = 'block';
+                    sourcePlayers.sort((a, b) => {
+                        if (leaderboardSort.by === 'elo') return leaderboardSort.order === 'desc' ? b.elo - a.elo : a.elo - b.elo;
+                        return leaderboardSort.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
                     });
-                    if (fromFilter) {
-                        getGeminiAnalysisForLeaderboard(sourcePlayers);
-                    }
-                    return;
+                } else {
+                     unrankedPlayersCard.style.display = 'none';
+                     sourcePlayers.sort((a, b) => b.elo - a.elo);
                 }
 
-                unrankedPlayersCard.style.display = 'block';
-                const rankedPlayers = players.filter(p => p.gamesPlayed > 0);
-                const unrankedPlayers = players.filter(p => p.gamesPlayed === 0);
-
-                rankedPlayers.sort((a, b) => {
-                    if (leaderboardSort.by === 'elo') return leaderboardSort.order === 'desc' ? b.elo - a.elo : a.elo - b.elo;
-                    return leaderboardSort.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-                });
-
-                leaderboard.innerHTML = rankedPlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Nessun giocatore classificato.</p>`;
-                rankedPlayers.forEach((player, index) => {
+                leaderboard.innerHTML = sourcePlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Nessun giocatore trovato.</p>`;
+                sourcePlayers.forEach((player, index) => {
                     let rankClass = '';
-                    if(leaderboardSort.by === 'elo' && leaderboardSort.order === 'desc') {
+                    if((isOverall && leaderboardSort.by === 'elo' && leaderboardSort.order === 'desc') || !isOverall) {
                         if (index === 0) rankClass = 'rank-1';
                         else if (index === 1) rankClass = 'rank-2';
                         else if (index === 2) rankClass = 'rank-3';
@@ -1299,28 +1295,38 @@
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="font-bold text-lg" style="color: var(--team-blue)">${Math.round(player.elo)}</span>
-                            <button class="btn-danger text-xs px-2 py-1 rounded" title="Elimina Giocatore">X</button>
+                            ${isOverall ? `<button class="btn-danger text-xs px-2 py-1 rounded" title="Elimina Giocatore">X</button>` : ''}
                         </div>`;
-                    playerRow.querySelector('button').addEventListener('click', e => { e.stopPropagation(); confirmDeletePlayer(player.id); });
+                    if(isOverall) {
+                        playerRow.querySelector('button').addEventListener('click', e => { e.stopPropagation(); confirmDeletePlayer(player.id); });
+                    }
                     playerRow.addEventListener('click', () => openHistoryModal(player.id));
                     leaderboard.appendChild(playerRow);
                 });
-
-                unrankedPlayers.sort((a, b) => a.name.localeCompare(b.name));
-                unrankedPlayersContainer.innerHTML = unrankedPlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Tutti i giocatori sono classificati.</p>`;
-                unrankedPlayers.forEach(player => {
-                     const playerRow = document.createElement('div');
-                     playerRow.className = 'flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer';
-                     playerRow.innerHTML = `
-                         <span class="text-lg font-medium text-gray-800">${player.name}</span>
-                         <div class="flex items-center gap-4">
-                             <span class="font-bold text-lg text-gray-400">${Math.round(player.elo)}</span>
-                             <button class="btn-danger text-xs px-2 py-1 rounded" title="Elimina Giocatore">Elimina</button>
-                         </div>`;
-                     playerRow.querySelector('button').addEventListener('click', e => { e.stopPropagation(); confirmDeletePlayer(player.id); });
-                     playerRow.addEventListener('click', () => openHistoryModal(player.id));
-                     unrankedPlayersContainer.appendChild(playerRow);
-                });
+                
+                if (isOverall) {
+                    getGeminiAnalysisForLeaderboard(sourcePlayers, true);
+                    const unrankedPlayers = players.filter(p => p.gamesPlayed === 0);
+                    unrankedPlayers.sort((a, b) => a.name.localeCompare(b.name));
+                    unrankedPlayersContainer.innerHTML = unrankedPlayers.length ? '' : `<p class="text-gray-500 text-center py-4">Tutti i giocatori sono classificati.</p>`;
+                    unrankedPlayers.forEach(player => {
+                        const playerRow = document.createElement('div');
+                        playerRow.className = 'flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer';
+                        playerRow.innerHTML = `
+                             <span class="text-lg font-medium text-gray-800">${player.name}</span>
+                             <div class="flex items-center gap-4">
+                                 <span class="font-bold text-lg text-gray-400">${Math.round(player.elo)}</span>
+                                 <button class="btn-danger text-xs px-2 py-1 rounded" title="Elimina Giocatore">Elimina</button>
+                             </div>`;
+                        playerRow.querySelector('button').addEventListener('click', e => { e.stopPropagation(); confirmDeletePlayer(player.id); });
+                        playerRow.addEventListener('click', () => openHistoryModal(player.id));
+                        unrankedPlayersContainer.appendChild(playerRow);
+                    });
+                }
+                
+                if (fromFilter) {
+                    getGeminiAnalysisForLeaderboard(sourcePlayers, false);
+                }
 
                 allSelects.forEach(select => {
                     const currentValue = select.value;
@@ -1332,7 +1338,6 @@
                 });
             }
 
-
             function handleLeaderboardFilter() {
                  const startDate = leaderboardStartDate.value;
                  const endDate = leaderboardEndDate.value;
@@ -1342,7 +1347,11 @@
                      const historyUntilDate = p.history.filter(h => h.date <= endDate);
                      const elo = historyUntilDate.length > 0 ? historyUntilDate[historyUntilDate.length - 1].elo : INITIAL_ELO;
                      return {...p, elo: Math.round(elo) };
+                 }).filter(p => {
+                     // Include only players who played in the period
+                     return p.history.some(h => h.date >= startDate && h.date <= endDate);
                  });
+
 
                  renderPlayers(playersAtDate, true);
             }
@@ -1352,7 +1361,7 @@
                 const endDate = matchHistoryEndDate.value;
                 let allHistoricalMatches = matchesToRender || getAllHistoricalMatches();
             
-                if (!matchesToRender) { // Only filter if not rendering a specific list (like for bulk delete)
+                if (!matchesToRender) {
                     let filteredMatches = allHistoricalMatches;
                     if (startDate && endDate) {
                         filteredMatches = allHistoricalMatches.filter(m => m.date >= startDate && m.date <= endDate);
@@ -1388,13 +1397,8 @@
             
                     const matchRow = document.createElement('div');
                     matchRow.className = 'border border-gray-200 rounded-lg';
-            
-                    let commentaryHTML = '';
-                    if (match.commentary) {
-                        commentaryHTML = `<div class="p-4 border-t border-gray-200 bg-white rounded-b-lg">
-                            <p class="text-sm italic text-gray-700">${match.commentary}</p>
-                        </div>`;
-                    }
+                    
+                    const hasScore = match.scoreA !== null && match.scoreB !== null;
             
                     matchRow.innerHTML = `
                         <button class="player-match-accordion-header w-full p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg">
@@ -1406,12 +1410,12 @@
                                 <div class="md:col-span-2 flex flex-col md:flex-row md:items-center justify-center text-center gap-2 md:gap-4 text-sm">
                                     <span class="truncate ${match.winner === 'A' ? 'font-bold team-blue-color' : 'text-gray-500'}">
                                         ${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} 
-                                        <span class="font-bold text-lg">${match.scoreA ?? ''}</span>
+                                        ${hasScore ? `<span class="font-bold text-lg">${match.scoreA}</span>` : ''}
                                         <span class="text-xs font-normal ${eloChangeClassA}">(${eloChangeStringA})</span>
                                     </span>
                                     <span class="text-gray-400 font-bold text-xs">VS</span>
                                     <span class="truncate ${match.winner === 'B' ? 'font-bold team-red-color' : 'text-gray-500'}">
-                                        <span class="font-bold text-lg">${match.scoreB ?? ''}</span>
+                                        ${hasScore ? `<span class="font-bold text-lg">${match.scoreB}</span>` : ''}
                                         ${teamBPlayers.attack.name} & ${teamBPlayers.defense.name} 
                                         <span class="text-xs font-normal ${eloChangeClassB}">(${eloChangeStringB})</span>
                                     </span>
@@ -1422,8 +1426,15 @@
                                 </div>
                             </div>
                         </button>
-                        <div class="player-match-accordion-content hidden">
-                           ${commentaryHTML}
+                        <div class="player-match-accordion-content hidden p-4 border-t border-gray-200 bg-white rounded-b-lg space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-sm mb-1">🎙️ La cronaca del critico:</h4>
+                                <p class="text-sm italic text-gray-700">${match.commentaries?.critic || "Nessun commento."}</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-sm mb-1">🤖 L'analisi del coach:</h4>
+                                <p class="text-sm italic text-gray-700">${match.commentaries?.coach || "Nessun commento."}</p>
+                            </div>
                         </div>
                     `;
             
@@ -1434,7 +1445,6 @@
                     container.appendChild(matchRow);
                 });
             }
-
 
             function renderComparisonSelectors() {
                 const sortedPlayers = [...players].sort((a,b) => a.name.localeCompare(b.name));
@@ -1919,7 +1929,7 @@
                 });
             }
 
-            async function callGeminiAPI(prompt, containerElement) {
+            async function callGeminiAPI(prompt, containerElement, signal) {
                 let apiKey = '';
                 try {
                     const encryptedKey = localStorage.getItem('geminiApiKey');
@@ -1930,7 +1940,7 @@
                     }
                 } catch (e) {
                      showMessage("API Key non trovata o non valida. Inseriscila nella Gestione Dati.", true);
-                     containerElement.innerHTML = `<p class="text-red-500">API Key di Gemini non configurata.</p>`;
+                     if (containerElement) containerElement.innerHTML = `<p class="text-red-500">API Key di Gemini non configurata.</p>`;
                      return null;
                 }
 
@@ -1947,6 +1957,7 @@
                                 maxOutputTokens: 8192,
                             },
                         }),
+                        signal,
                     });
 
                     if (!response.ok) {
@@ -1963,13 +1974,17 @@
                         const finishReason = candidate?.finishReason;
                         let errorMessage = "La risposta dell'API non contiene testo.";
                         if (finishReason) {
-                           errorMessage = `Generazione interrotta per motivo: ${finishReason}. Prova ad aumentare i token massimi se il problema persiste.`;
+                           errorMessage = `Generazione interrotta per motivo: ${finishReason}.`;
                         }
                         throw new Error(errorMessage);
                     }
                 } catch (error) {
+                    if (error.name === 'AbortError') {
+                        console.log('Gemini API call aborted.');
+                        return null;
+                    }
                     showMessage(`Errore Gemini: ${error.message}`, true);
-                    containerElement.innerHTML = `<p class="text-red-500">Errore durante la generazione della risposta AI.</p>`;
+                    if (containerElement) containerElement.innerHTML = `<p class="text-red-500">Errore durante la generazione della risposta AI.</p>`;
                     return null;
                 }
             }
@@ -2010,7 +2025,11 @@ Dati del giocatore nel periodo:
                 geminiLoading.classList.add('hidden');
             }
             
-            async function getGeminiAnalysisForLeaderboard(filteredPlayers) {
+            async function getGeminiAnalysisForLeaderboard(filteredPlayers, isOverall) {
+                if(filteredPlayers.length === 0) {
+                    leaderboardCommentaryContainer.classList.add('hidden');
+                    return;
+                }
                 leaderboardCommentaryContainer.classList.remove('hidden');
                 leaderboardCommentaryResult.innerHTML = `<p class="animate-pulse">Il critico sta affilando la penna...</p>`;
                 
@@ -2018,8 +2037,15 @@ Dati del giocatore nel periodo:
                 const endDate = leaderboardEndDate.value;
 
                 const topPlayersSummary = filteredPlayers.slice(0, 5).map((p, index) => `${index + 1}. ${p.name} (ELO: ${p.elo})`).join('\n');
+                
+                let timeFrame;
+                if(isOverall) {
+                    timeFrame = "la classifica generale di tutti i tempi."
+                } else {
+                    timeFrame = `la classifica per il periodo dal ${new Date(startDate).toLocaleDateString('it-IT')} al ${new Date(endDate).toLocaleDateString('it-IT')}.`
+                }
 
-                const prompt = `Sei un critico sportivo di calcio sagace e con un occhio per il dettaglio. Analizza la classifica dei giocatori di calcio balilla per il periodo dal ${new Date(startDate).toLocaleDateString('it-IT')} al ${new Date(endDate).toLocaleDateString('it-IT')}. La classifica attuale (top 5) è:\n${topPlayersSummary}\n\nScrivi un breve commento (2-3 frasi) in stile giornalistico, evidenziando chi sta dominando, eventuali sorprese o chi sta deludendo. Usa un linguaggio evocativo e da cronaca sportiva.`;
+                const prompt = `Sei un critico sportivo di calcio sagace e con un occhio per il dettaglio. Analizza ${timeFrame} La classifica attuale (top 5) è:\n${topPlayersSummary}\n\nScrivi un breve commento (2-3 frasi) in stile giornalistico, evidenziando chi sta dominando, eventuali sorprese o chi sta deludendo. Usa un linguaggio evocativo e da cronaca sportiva.`;
                 
                 const text = await callGeminiAPI(prompt, leaderboardCommentaryResult);
                 if (text) {
@@ -2027,39 +2053,53 @@ Dati del giocatore nel periodo:
                 }
             }
             
-            async function generateMatchCommentary(matchId) {
+            async function generateDualMatchCommentaries(matchId) {
                 const match = matches.find(m => m.id === matchId);
                 if (!match) return;
 
                 const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
                 const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
-
-                let prompt = `Sei un critico sportivo di calcio. Commenta la seguente partita di calcio balilla, terminata in data ${new Date(match.date).toLocaleDateString('it-IT')}. Sii incisivo e professionale.
+                
+                // --- Prompt per il Critico ---
+                let promptCritic = `Sei un critico sportivo di calcio. Commenta la seguente partita di calcio balilla, terminata in data ${new Date(match.date).toLocaleDateString('it-IT')}. Sii incisivo e professionale.
 
 Dettagli Partita:
 - Squadra Blu: Attacco ${teamAPlayers.attack.name}, Difesa ${teamAPlayers.defense.name}
 - Squadra Rossa: Attacco ${teamBPlayers.attack.name}, Difesa ${teamBPlayers.defense.name}
 - Risultato Finale: Blu ${match.scoreA} - ${match.scoreB} Rossa
-- Vincitore: Squadra ${match.winner === 'A' ? 'Blu' : 'Rossa'}
-- Variazione ELO per i vincitori: +${Math.abs(Math.round(match.eloChange))}, per gli sconfitti: ${Math.round(match.eloChange) > 0 ? -Math.round(match.eloChange) : Math.round(match.eloChange)}
-`;
+- Vincitore: Squadra ${match.winner === 'A' ? 'Blu' : 'Rossa'}`;
 
                 if (match.scoreA === null || match.scoreB === null) {
-                    prompt += "\nNota: Il punteggio dettagliato non è stato registrato, basa il commento solo sulla performance ELO e sulla reputazione dei giocatori.";
+                    promptCritic += "\nNota: Il punteggio dettagliato non è stato registrato, basa il commento solo sulla performance ELO e sulla reputazione dei giocatori.";
+                }
+                promptCritic += "\nScrivi un breve paragrafo di commento sulla partita.";
+                
+                const criticText = await callGeminiAPI(promptCritic);
+                if (criticText) {
+                    match.commentaries.critic = criticText;
+                } else {
+                    match.commentaries.critic = "Generazione commento del critico fallita.";
+                }
+                
+                // --- Prompt per il Coach ---
+                let promptCoach = `Sei un coach di calcio balilla. Analizza la performance di ogni singolo giocatore nella partita appena conclusa. Fornisci un breve feedback (una frase per giocatore) su ${teamAPlayers.attack.name}, ${teamAPlayers.defense.name}, ${teamBPlayers.attack.name}, e ${teamBPlayers.defense.name}. Sii diretto e costruttivo.
+
+Dettagli Partita:
+- Squadra Blu (Vincitrice: ${match.winner === 'A'}): Attacco ${teamAPlayers.attack.name}, Difesa ${teamAPlayers.defense.name}
+- Squadra Rossa (Vincitrice: ${match.winner === 'B'}): Attacco ${teamBPlayers.attack.name}, Difesa ${teamBPlayers.defense.name}
+- Risultato Finale: Blu ${match.scoreA} - ${match.scoreB} Rossa`;
+
+                const coachText = await callGeminiAPI(promptCoach);
+                 if (coachText) {
+                    match.commentaries.coach = coachText;
+                } else {
+                    match.commentaries.coach = "Generazione analisi del coach fallita.";
                 }
 
-                prompt += "\nScrivi un breve paragrafo di commento sulla partita.";
-                
-                // Non c'è un elemento UI specifico per questo, quindi l'errore verrà mostrato solo nel popup.
-                const text = await callGeminiAPI(prompt, { innerHTML: '' });
-                if (text) {
-                    match.commentary = text;
-                    showMessage("Commento AI generato!", false);
-                } else {
-                    match.commentary = "Generazione commento fallita.";
-                     showMessage("Generazione commento fallita.", true);
-                }
+                showMessage("Commenti AI generati!", false);
+                saveAndRender(); // Save after both are done
             }
+
 
             async function generatePreMatchCommentary() {
                 if (preMatchCommentaryAbortController) {
@@ -2087,7 +2127,7 @@ Dettagli Partita:
 
 Sulla base di questi dati e della forza percepita dei giocatori, scrivi un breve commento pre-partita (2-3 frasi), indicando chi vedi come favorito e perché.`;
                 
-                 const text = await callGeminiAPI(prompt, preMatchCommentaryResult);
+                 const text = await callGeminiAPI(prompt, preMatchCommentaryResult, signal);
                  if (signal.aborted) return;
 
                  if (text) {
@@ -2404,8 +2444,17 @@ Usa un massimo di 3-4 paragrafi.`;
                     button.addEventListener('click', () => {
                         const content = button.nextElementSibling;
                         const icon = button.querySelector('svg');
+                        const isOpening = content.classList.contains('hidden');
                         content.classList.toggle('hidden');
                         icon.classList.toggle('rotate-180');
+                        
+                        if(isOpening && button.querySelector('h2').textContent.includes('Classifica Giocatori')) {
+                            // Trigger analysis if opening and on "Overall" tab
+                            const isOverall = document.getElementById('rankOverall').checked;
+                            if (isOverall) {
+                                renderPlayers();
+                            }
+                        }
                     });
                 });
 
@@ -2466,12 +2515,20 @@ Usa un massimo di 3-4 paragrafi.`;
             function loadData(data) {
                 if (!data.players || !data.matches) throw new Error("File non valido.");
 
+                // Data migration for commentaries
                 data.matches.forEach(m => {
                     if (Array.isArray(m.teamA)) {
                         m.teamA = { attack: m.teamA[0], defense: m.teamA[1] };
                         m.teamB = { attack: m.teamB[0], defense: m.teamB[1] };
                     }
+                    if (m.commentary && typeof m.commentary === 'string') {
+                        m.commentaries = { critic: m.commentary, coach: null };
+                        delete m.commentary;
+                    } else if (!m.commentaries) {
+                        m.commentaries = { critic: null, coach: null };
+                    }
                 });
+                
                 players = data.players || [];
                 matches = data.matches || [];
                 tournaments = data.tournaments || [];
@@ -3120,6 +3177,20 @@ Usa un massimo di 3-4 paragrafi.`;
                     }
                 });
 
+                [scoreAInput, scoreBInput].forEach(input => {
+                    input.addEventListener('input', () => {
+                        const scoreA = parseInt(scoreAInput.value);
+                        const scoreB = parseInt(scoreBInput.value);
+                        if (isNaN(scoreA) || isNaN(scoreB)) return;
+
+                        if (scoreA > scoreB) {
+                            document.querySelector('input[name="winner"][value="A"]').checked = true;
+                        } else if (scoreB > scoreA) {
+                            document.querySelector('input[name="winner"][value="B"]').checked = true;
+                        }
+                    });
+                });
+
                 matchDateInput.value = new Date().toISOString().split('T')[0];
                 addPlayerBtn.addEventListener('click', addPlayer);
                 playerNameInput.addEventListener('keypress', e => { if (e.key === 'Enter') addPlayer(); });
@@ -3252,7 +3323,9 @@ Usa un massimo di 3-4 paragrafi.`;
                     const isPeriod = e.target.value === 'period';
                     leaderboardDateFilters.classList.toggle('hidden', !isPeriod);
                     leaderboardCommentaryContainer.classList.add('hidden');
-                    if (!isPeriod) renderPlayers(); // Reset to overall if switched back
+                    if (!isPeriod) {
+                        renderPlayers();
+                    }
                 }));
                 leaderboardFilterBtn.addEventListener('click', handleLeaderboardFilter);
 
@@ -3319,3 +3392,4 @@ Usa un massimo di 3-4 paragrafi.`;
     </script>
 </body>
 </html>
+
