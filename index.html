@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foosball Lab</title>
 
-    <!-- PWA / Add to Home Screen Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Foosball Lab">
@@ -13,7 +12,6 @@
     <meta name="theme-color" content="#f8f9fa">
     <link rel="manifest" href="manifest.json">
 
-    <!-- Icons for Home Screen -->
     <link rel="apple-touch-icon" href="foosball_16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="foosball_16.png">
     <link rel="icon" type="image/png" sizes="16x16" href="foosball_16.png">
@@ -174,18 +172,14 @@
 <body class="min-h-screen p-4 sm:p-6 lg:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
         <header class="text-center mb-10">
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-800">Foosball Lab</h1>
             <p class="mt-2 text-base sm:text-lg text-gray-500">Analisi, Strategie e Gloria nel Calcio Balilla</p>
         </header>
 
-        <!-- Main Content -->
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <!-- Colonna Controlli -->
             <div class="lg:col-span-1 flex flex-col gap-8">
-                <!-- Aggiungi Giocatore -->
                 <div class="card">
                     <h2 class="text-2xl font-semibold mb-4 text-gray-800">Aggiungi Giocatore</h2>
                     <div class="flex gap-2">
@@ -194,17 +188,14 @@
                     </div>
                 </div>
 
-                <!-- Registra Partita -->
                 <div class="card">
                     <h2 class="text-2xl font-semibold mb-4 text-gray-800">Registra Partita Amichevole</h2>
                     <div class="space-y-6">
-                        <!-- Data Partita -->
                         <div>
                              <h3 class="font-bold text-gray-600 mb-2 text-lg">Data</h3>
                              <input type="date" id="matchDate">
                         </div>
 
-                        <!-- Squadra Blu -->
                         <div>
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="font-bold team-blue-color text-lg">Squadra Blu</h3>
@@ -237,7 +228,6 @@
                         </div>
 
 
-                        <!-- Squadra Rossa -->
                         <div>
                              <div class="flex justify-between items-center mb-2">
                                 <h3 class="font-bold team-red-color text-lg">Squadra Rossa</h3>
@@ -264,7 +254,6 @@
                             <button id="teamAssistantBtn" class="btn btn-secondary w-full mt-2 text-sm">Assistente Squadre...</button>
                         </div>
                         
-                        <!-- Punteggio -->
                         <div>
                             <h3 class="font-bold text-gray-600 mb-2 text-lg">Punteggio Finale</h3>
                             <div class="flex items-center gap-4">
@@ -280,7 +269,6 @@
                             </div>
                         </div>
 
-                        <!-- Vincitore -->
                         <div>
                             <h3 class="font-bold text-gray-600 mb-2 text-lg">Vincitore</h3>
                             <div class="flex items-center space-x-2 rounded-lg bg-gray-100 p-1">
@@ -295,11 +283,9 @@
                             </div>
                         </div>
 
-                        <!-- Bottone Registra -->
                         <button id="recordMatchBtn" class="btn btn-primary w-full text-lg">Registra Risultato...</button>
                         
-                         <!-- Commento Pre-Partita AI -->
-                        <div id="preMatchCommentaryContainer" class="hidden border-t pt-4 mt-4">
+                         <div id="preMatchCommentaryContainer" class="hidden border-t pt-4 mt-4">
                             <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
                                 <span>🎙️</span> Il commento pre-partita
                             </h3>
@@ -307,20 +293,16 @@
                         </div>
                     </div>
                 </div>
-                 <!-- Area Messaggi -->
-                <div id="messageArea" class="hidden p-4 rounded-lg text-center font-semibold text-white"></div>
+                 <div id="messageArea" class="hidden p-4 rounded-lg text-center font-semibold text-white"></div>
             </div>
 
-            <!-- Colonna Classifica e Confronto -->
             <div class="lg:col-span-2 flex flex-col gap-8">
-                <!-- Classifica -->
                 <div class="card">
                     <button class="accordion-header flex justify-between items-center w-full">
                         <h2 class="text-2xl font-semibold text-gray-800">Classifica Giocatori</h2>
                         <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div id="leaderboard-card" class="accordion-content hidden pt-4">
-                        <!-- Filtro Classifica -->
                         <div class="flex flex-col sm:flex-row items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg">
                             <div class="flex items-center gap-4">
                                 <input type="radio" id="rankOverall" name="rankType" value="overall" class="text-[--team-blue] focus:ring-[--team-blue]" checked><label for="rankOverall" class="text-sm font-medium">Generale</label>
@@ -333,8 +315,7 @@
                             </div>
                         </div>
                         
-                         <!-- Commento Classifica AI -->
-                        <div id="leaderboardCommentaryContainer" class="hidden mb-4">
+                         <div id="leaderboardCommentaryContainer" class="hidden mb-4">
                             <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
                                 <span>🎙️</span> La parola al critico
                             </h3>
@@ -359,8 +340,7 @@
                     </div>
                 </div>
 
-                 <!-- Giocatori non classificati -->
-                <div class="card" id="unrankedPlayersCard">
+                 <div class="card" id="unrankedPlayersCard">
                     <button class="accordion-header flex justify-between items-center w-full">
                         <h2 class="text-2xl font-semibold text-gray-800">Giocatori non classificati</h2>
                         <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -371,8 +351,7 @@
                     </div>
                 </div>
 
-                 <!-- Centro Analisi Strategica -->
-                <div class="card">
+                 <div class="card">
                      <button class="accordion-header flex justify-between items-center w-full">
                         <h2 class="text-2xl font-semibold text-gray-800">Centro Analisi Strategica</h2>
                         <svg class="w-6 h-6 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -386,7 +365,6 @@
                             </nav>
                         </div>
                         <div class="space-y-4">
-                            <!-- Periodo -->
                             <div>
                                 <h3 class="font-bold text-gray-600 mb-2">Seleziona Periodo</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -394,7 +372,6 @@
                                     <input type="date" id="comparisonEndDate">
                                 </div>
                             </div>
-                            <!-- Controlli Dinamici -->
                             <div id="synergyControls" class="hidden space-y-2">
                                 <h3 class="font-bold text-gray-600">Analizza con...</h3>
                                 <select id="synergyPivotPlayer"></select>
@@ -407,7 +384,6 @@
                                 </select>
                             </div>
 
-                             <!-- Lista Giocatori -->
                              <div>
                                  <h3 id="playerListTitle" class="font-bold text-gray-600 mb-2">Seleziona Giocatori</h3>
                                  <div id="comparisonPlayerList" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 border rounded-lg border-gray-200"></div>
@@ -419,7 +395,6 @@
             </div>
         </main>
 
-        <!-- Storico Partite -->
         <div class="card mt-8 lg:col-span-3">
              <button class="accordion-header flex justify-between items-center w-full">
                 <h2 class="text-2xl font-semibold text-gray-800">Storico Partite</h2>
@@ -447,7 +422,6 @@
             </div>
         </div>
 
-        <!-- Gestione Tornei -->
         <div class="card mt-8 lg:col-span-3">
             <button class="accordion-header flex justify-between items-center w-full">
                 <h2 class="text-2xl font-semibold text-gray-800 flex items-center gap-2"><span>🏆</span> Gestione Tornei</h2>
@@ -468,7 +442,6 @@
             </div>
         </div>
 
-        <!-- Gestione Dati -->
         <div class="card mt-8 lg:col-span-3">
             <button class="accordion-header flex justify-between items-center w-full">
                 <h2 class="text-2xl font-semibold text-gray-800">Gestione Dati</h2>
@@ -502,15 +475,13 @@
         </div>
     </div>
 
-    <!-- Modal Assistente Pre-Partita -->
     <div id="preMatchAssistantModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="card w-full max-w-xl transform transition-all text-center relative">
             <button id="closePreMatchAssistantBtn" class="absolute top-2 right-4 text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Benvenuto al Foosball Lab!</h2>
             <p class="text-gray-600 mb-6">Cosa vuoi fare oggi?</p>
             <div id="wizardActions" class="space-y-4">
-                <!-- Azioni Dinamiche -->
-            </div>
+                </div>
             <div class="mt-6 text-sm">
                 <label class="flex items-center justify-center gap-2">
                     <input type="checkbox" id="hideWizardCheckbox" class="rounded border-gray-300 text-[--team-blue] focus:ring-[--team-blue]">
@@ -520,15 +491,13 @@
         </div>
     </div>
 
-    <!-- Modal Profilo Giocatore -->
     <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-4xl transform transition-all flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-2 flex-shrink-0">
                 <div id="playerProfileHeader"></div>
                 <button id="closeHistoryModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
             </div>
-             <!-- Filtro Data Globale -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200 items-end flex-shrink-0">
+             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200 items-end flex-shrink-0">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Data Inizio</label>
                     <input type="date" id="historyStartDate" class="mt-1">
@@ -540,9 +509,7 @@
                 <button id="historyFilterBtn" class="btn btn-primary h-fit">Applica Filtro</button>
             </div>
 
-            <!-- Contenuto scrollabile del modal -->
             <div class="overflow-y-auto flex-grow pr-2">
-                <!-- Sezione Analisi AI -->
                 <div class="mb-6">
                     <h3 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2">
                         <span>🤖</span> Coach AI
@@ -553,7 +520,6 @@
                     </div>
                 </div>
 
-                <!-- Tabs -->
                 <div class="border-b border-gray-200 mb-4 flex-shrink-0">
                     <nav class="flex space-x-2 -mb-px overflow-x-auto" aria-label="Tabs">
                         <button id="tabStats" class="modal-tab">📊 Statistiche & Sinergie</button>
@@ -563,7 +529,6 @@
                     </nav>
                 </div>
 
-                <!-- Tab Content -->
                 <div id="tabStatsContent" class="hidden">
                      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 text-center">
                         <div class="p-4 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-gray-800" id="statsMatchesPlayed">-</p><p class="text-sm text-gray-600">Partite Giocate</p></div>
@@ -594,7 +559,6 @@
         </div>
     </div>
 
-    <!-- Modal per Analisi Strategica -->
     <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-4xl transform transition-all">
              <div class="flex justify-between items-center mb-4">
@@ -607,7 +571,6 @@
         </div>
     </div>
 
-    <!-- Modal Assistente Squadre -->
     <div id="teamAssistantModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-2xl transform transition-all">
              <div class="flex justify-between items-center mb-4">
@@ -621,11 +584,9 @@
                 </nav>
             </div>
 
-            <!-- Tab Trova Avversari -->
             <div id="assistantOpponentsContent">
                  <div id="opponentPairsList" class="space-y-4 max-h-[60vh] overflow-y-auto p-1"></div>
             </div>
-            <!-- Tab Trova Compagno -->
             <div id="assistantPartnersContent" class="hidden space-y-4">
                 <div>
                     <h3 class="font-bold text-gray-600 mb-2">Seleziona un giocatore e il suo ruolo</h3>
@@ -646,7 +607,6 @@
         </div>
     </div>
     
-    <!-- Modal Spiegazione ELO -->
     <div id="eloExplanationModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-2xl transform transition-all">
              <div class="flex justify-between items-center mb-4">
@@ -659,7 +619,6 @@
         </div>
     </div>
 
-    <!-- Modal di Conferma Registrazione Partita -->
     <div id="confirmRecordModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-md transform transition-all text-center">
              <h2 class="text-2xl font-bold text-gray-800 mb-4">Conferma Partita</h2>
@@ -671,7 +630,6 @@
         </div>
     </div>
 
-    <!-- Modal di Conferma Eliminazione Singola Partita -->
     <div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-md transform transition-all text-center">
              <h2 class="text-2xl font-bold text-gray-800 mb-4">Conferma Eliminazione</h2>
@@ -683,7 +641,6 @@
         </div>
     </div>
 
-    <!-- Modal di Conferma Eliminazione Giocatore -->
     <div id="confirmPlayerDeleteModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-md transform transition-all text-center">
              <h2 class="text-2xl font-bold text-gray-800 mb-4">Conferma Eliminazione Giocatore</h2>
@@ -695,7 +652,6 @@
         </div>
     </div>
 
-    <!-- Modal di Conferma Eliminazione Torneo -->
     <div id="confirmDeleteTournamentModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-md transform transition-all text-center">
              <h2 class="text-2xl font-bold text-gray-800 mb-4">Conferma Eliminazione Torneo</h2>
@@ -707,7 +663,6 @@
         </div>
     </div>
 
-    <!-- Modal di Conferma Eliminazione Multipla -->
     <div id="confirmBulkDeleteModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-2xl transform transition-all">
              <h2 class="text-2xl font-bold text-gray-800 mb-2">Conferma Eliminazione Multipla</h2>
@@ -720,7 +675,6 @@
         </div>
     </div>
 
-    <!-- Modal Creazione Torneo -->
     <div id="tournamentCreationModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-2xl transform transition-all flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
@@ -728,7 +682,6 @@
                 <button id="closeTournamentCreationModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
             </div>
             <div class="overflow-y-auto flex-grow">
-                <!-- Step 1: Info Base -->
                 <div id="tourneyStep1">
                     <div class="space-y-4">
                         <div>
@@ -758,7 +711,6 @@
                     </div>
                      <button id="tourneyNextToStep2" class="btn btn-primary w-full mt-6">Prossimo: Seleziona Giocatori</button>
                 </div>
-                <!-- Step 2: Seleziona Giocatori -->
                 <div id="tourneyStep2" class="hidden">
                     <h3 class="font-bold text-lg mb-2">Seleziona Giocatori Partecipanti</h3>
                     <p class="text-sm text-gray-500 mb-4">Devi selezionare <span id="requiredPlayerCount" class="font-bold"></span> giocatori.</p>
@@ -768,7 +720,6 @@
                          <button id="tourneyNextToStep3" class="btn btn-primary flex-grow" disabled>Prossimo: Crea Squadre</button>
                     </div>
                 </div>
-                <!-- Step 3: Crea Squadre -->
                 <div id="tourneyStep3" class="hidden">
                      <div class="border-b border-gray-200 mb-4">
                         <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
@@ -788,21 +739,18 @@
         </div>
     </div>
 
-     <!-- Modal Vista Torneo -->
-    <div id="tournamentViewModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+     <div id="tournamentViewModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-6xl transform transition-all flex flex-col max-h-[90vh]">
             <div id="tournamentViewHeader" class="flex justify-between items-start mb-4 flex-shrink-0"></div>
             <div id="tournamentBracketContainer" class="overflow-x-auto flex-grow bg-gray-50 p-4 rounded-lg"></div>
         </div>
     </div>
 
-    <!-- Modal Gestione Partita Torneo -->
     <div id="tournamentMatchModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-2xl transform transition-all">
              <h2 class="text-2xl font-bold text-gray-800 mb-4">Gestisci Partita Torneo</h2>
              <div id="tournamentMatchContent" class="space-y-6">
-                <!-- Contenuto dinamico -->
-             </div>
+                </div>
              <div class="flex justify-end gap-4 mt-6">
                  <button id="cancelTournamentMatch" class="btn" style="background-color: var(--text-muted); color: white;">Annulla</button>
                  <button id="confirmTournamentMatch" class="btn btn-primary">Conferma Risultato</button>
@@ -1126,7 +1074,7 @@
                 openModal(confirmRecordModal);
             }
 
-            async function recordMatch() {
+            function recordMatch() {
                 const newMatch = {
                     id: Date.now(),
                     date: matchDateInput.value,
@@ -1140,10 +1088,8 @@
                 matches.push(newMatch);
 
                 recalculateAllElos();
-                showMessage("Partita registrata con successo! Genero i commenti AI...");
+                showMessage("Partita registrata con successo!");
                 
-                await generateDualMatchCommentaries(newMatch.id);
-
                 saveAndRender();
             }
 
@@ -1398,7 +1344,7 @@
                     const matchRow = document.createElement('div');
                     matchRow.className = 'border border-gray-200 rounded-lg';
                     
-                    const hasScore = match.scoreA !== null && match.scoreB !== null;
+                    const hasScore = typeof match.scoreA === 'number' && typeof match.scoreB === 'number' && !isNaN(match.scoreA) && !isNaN(match.scoreB);
             
                     matchRow.innerHTML = `
                         <button class="player-match-accordion-header w-full p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg">
@@ -1410,7 +1356,7 @@
                                 <div class="md:col-span-2 flex flex-col md:flex-row md:items-center justify-center text-center gap-2 md:gap-4 text-sm">
                                     <span class="truncate ${match.winner === 'A' ? 'font-bold team-blue-color' : 'text-gray-500'}">
                                         ${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} 
-                                        ${hasScore ? `<span class="font-bold text-lg">${match.scoreA}</span>` : ''}
+                                        ${hasScore ? `<span class="font-bold text-lg">${match.scoreA}</span>` : '<span class="font-bold text-lg text-gray-400">N.D.</span>'}
                                         <span class="text-xs font-normal ${eloChangeClassA}">(${eloChangeStringA})</span>
                                     </span>
                                     <span class="text-gray-400 font-bold text-xs">VS</span>
@@ -1434,6 +1380,9 @@
                             <div>
                                 <h4 class="font-semibold text-gray-800 text-sm mb-1">🤖 L'analisi del coach:</h4>
                                 <p class="text-sm italic text-gray-700">${match.commentaries?.coach || "Nessun commento."}</p>
+                            </div>
+                            <div class="text-right">
+                                <button class="btn btn-secondary text-xs px-2 py-1 rounded generate-commentary-btn" data-match-id="${match.id}" ${match.isTournament ? 'style="display:none;"' : ''}>Genera Commenti AI</button>
                             </div>
                         </div>
                     `;
@@ -1945,7 +1894,7 @@
                 }
 
                 try {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`, {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -2582,9 +2531,11 @@ Usa un massimo di 3-4 paragrafi.`;
                     }
                 } else {
                     // Imposta e salva la chiave di default se non ce n'è una
-                    const defaultKey = "AIzaSyBewWaDDMlKpkQOT_4vFGrElqYWV61YU7c";
-                    geminiApiKeyInput.value = defaultKey;
-                    localStorage.setItem('geminiApiKey', encryptKey(defaultKey));
+                    const defaultKey = "YOUR_DEFAULT_API_KEY"; // Inserisci una chiave predefinita se necessario
+                    if(defaultKey !== "YOUR_DEFAULT_API_KEY"){
+                        geminiApiKeyInput.value = defaultKey;
+                        localStorage.setItem('geminiApiKey', encryptKey(defaultKey));
+                    }
                 }
             }
 
@@ -2994,7 +2945,6 @@ Usa un massimo di 3-4 paragrafi.`;
 
                 tournamentMatchContent.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Team A Roles -->
                         <div>
                              <h3 class="font-bold text-lg mb-2">${getTeamName(tournament, teamA.id, true)}</h3>
                              <p class="text-sm text-gray-500 mb-2">Chi gioca in attacco?</p>
@@ -3007,7 +2957,6 @@ Usa un massimo di 3-4 paragrafi.`;
                                 </label>
                              </div>
                         </div>
-                        <!-- Team B Roles -->
                         <div>
                              <h3 class="font-bold text-lg mb-2">${getTeamName(tournament, teamB.id, true)}</h3>
                              <p class="text-sm text-gray-500 mb-2">Chi gioca in attacco?</p>
@@ -3371,6 +3320,18 @@ Usa un massimo di 3-4 paragrafi.`;
                 cancelTournamentDeleteBtn.addEventListener('click', () => { closeModal(confirmDeleteTournamentModal); tournamentIdToDelete = null; });
                 confirmTournamentDeleteBtn.addEventListener('click', deleteTournament);
                 setupTournamentCreationWizard();
+                
+                // Listener per i commenti AI
+                matchHistoryContainer.addEventListener('click', async e => {
+                    const commentaryBtn = e.target.closest('.generate-commentary-btn');
+                    if (commentaryBtn) {
+                        const matchId = parseInt(commentaryBtn.dataset.matchId);
+                        commentaryBtn.disabled = true;
+                        commentaryBtn.textContent = 'Generando...';
+                        await generateDualMatchCommentaries(matchId);
+                        // Il saveAndRender() dentro la funzione aggiornerà la vista
+                    }
+                });
 
                 setupAccordions();
                 loadFromStorage();
@@ -3392,4 +3353,3 @@ Usa un massimo di 3-4 paragrafi.`;
     </script>
 </body>
 </html>
-
