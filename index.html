@@ -1128,7 +1128,7 @@
                                 eloChange: match.eloChange,
                                 teamA_elos: match.teamA_elos,
                                 teamB_elos: match.teamB_elos,
-                                scoreA: null, // I tornei non hanno punteggio per ora
+                                scoreA: null, 
                                 scoreB: null,
                                 commentaries: { critic: null, coach: null }
                             });
@@ -1138,79 +1138,65 @@
                 return allMatches.sort((a, b) => new Date(b.date) - new Date(a.date));
             }
 
-            /**
-             * Ricalcola da zero tutti i punteggi ELO dei giocatori.
-             * Questa funzione è fondamentale e viene chiamata dopo ogni modifica
-             * che potrebbe influenzare i punteggi (es. aggiunta/rimozione partita).
-             * Ordina tutte le partite (amichevoli e di torneo) cronologicamente
-             * e ricalcola l'elo di ogni giocatore partita dopo partita.
-             */
             function recalculateAllElos() {
                 const allHistoricalMatches = getAllHistoricalMatches().sort((a, b) => new Date(a.date) - new Date(b.date));
 
-                // Reset di ogni giocatore allo stato iniziale
                 players.forEach(player => {
                     player.history = [player.history[0] || { date: new Date(0).toISOString().split('T')[0], elo: INITIAL_ELO }];
                     player.elo = INITIAL_ELO;
                     player.gamesPlayed = 0;
                 });
 
-                // Itera su ogni partita in ordine cronologico per calcolare l'ELO
                 allHistoricalMatches.forEach(matchData => {
-                    try {
-                        const affectsElo = !matchData.isTournament || (tournaments.find(t => t.name === matchData.tournamentName)?.affectsElo ?? false);
+                    const affectsElo = !matchData.isTournament || (tournaments.find(t => t.name === matchData.tournamentName)?.affectsElo ?? false);
 
-                        const teamAPlayers = { attack: getPlayer(matchData.teamA.attack), defense: getPlayer(matchData.teamA.defense) };
-                        const teamBPlayers = { attack: getPlayer(matchData.teamB.attack), defense: getPlayer(matchData.teamB.defense) };
-                        
-                        // Salta la partita se uno dei giocatori è stato eliminato e non esiste più
-                        if (!teamAPlayers.attack || !teamAPlayers.defense || !teamBPlayers.attack || !teamBPlayers.defense) return;
+                    const teamAPlayers = { attack: getPlayer(matchData.teamA.attack), defense: getPlayer(matchData.teamA.defense) };
+                    const teamBPlayers = { attack: getPlayer(matchData.teamB.attack), defense: getPlayer(matchData.teamB.defense) };
 
-                        const currentTeamAElos = { attack: teamAPlayers.attack.elo, defense: teamAPlayers.defense.elo };
-                        const currentTeamBElos = { attack: teamBPlayers.attack.elo, defense: teamBPlayers.defense.elo };
+                    if (!teamAPlayers.attack || !teamAPlayers.defense || !teamBPlayers.attack || !teamBPlayers.defense) return;
 
-                        let eloChange = 0;
-                        if (affectsElo) {
-                            const teamAElo = (currentTeamAElos.attack + currentTeamAElos.defense) / 2;
-                            const teamBElo = (currentTeamBElos.attack + currentTeamBElos.defense) / 2;
-                            const expectedScoreA = 1 / (1 + Math.pow(10, (teamBElo - teamAElo) / 400));
-                            const actualScoreA = (matchData.winner === 'A') ? 1 : 0;
-                            eloChange = K_FACTOR * (actualScoreA - expectedScoreA);
+                    const currentTeamAElos = { attack: teamAPlayers.attack.elo, defense: teamAPlayers.defense.elo };
+                    const currentTeamBElos = { attack: teamBPlayers.attack.elo, defense: teamBPlayers.defense.elo };
 
-                            Object.values(teamAPlayers).forEach(p => {
-                                const newElo = Math.round(p.elo + eloChange);
-                                p.elo = newElo;
-                                p.history.push({ date: matchData.date, elo: newElo });
-                            });
-                            Object.values(teamBPlayers).forEach(p => {
-                                const newElo = Math.round(p.elo - eloChange);
-                                p.elo = newElo;
-                                p.history.push({ date: matchData.date, elo: newElo });
-                            });
-                        }
+                    let eloChange = 0;
+                    if (affectsElo) {
+                        const teamAElo = (currentTeamAElos.attack + currentTeamAElos.defense) / 2;
+                        const teamBElo = (currentTeamBElos.attack + currentTeamBElos.defense) / 2;
+                        const expectedScoreA = 1 / (1 + Math.pow(10, (teamBElo - teamAElo) / 400));
+                        const actualScoreA = (matchData.winner === 'A') ? 1 : 0;
+                        eloChange = K_FACTOR * (actualScoreA - expectedScoreA);
 
-                        [...Object.values(teamAPlayers), ...Object.values(teamBPlayers)].forEach(p => {
-                            p.gamesPlayed = (p.gamesPlayed || 0) + 1;
+                        Object.values(teamAPlayers).forEach(p => {
+                            const newElo = Math.round(p.elo + eloChange);
+                            p.elo = newElo;
+                            p.history.push({ date: matchData.date, elo: newElo });
                         });
-                        
-                        // Trova la partita originale per salvare i dati del calcolo ELO
-                        let originalMatch;
-                        if (matchData.isTournament) {
-                            const tournament = tournaments.find(t => t.name === matchData.tournamentName);
-                            if (tournament) {
-                                originalMatch = tournament.rounds.flat().find(m => `t-${m.id}` === matchData.id);
-                            }
-                        } else {
-                            originalMatch = matches.find(m => m.id === matchData.id);
-                        }
+                        Object.values(teamBPlayers).forEach(p => {
+                            const newElo = Math.round(p.elo - eloChange);
+                            p.elo = newElo;
+                            p.history.push({ date: matchData.date, elo: newElo });
+                        });
+                    }
 
-                        if (originalMatch) {
-                            originalMatch.eloChange = eloChange;
-                            originalMatch.teamA_elos = currentTeamAElos;
-                            originalMatch.teamB_elos = currentTeamBElos;
+                    [...Object.values(teamAPlayers), ...Object.values(teamBPlayers)].forEach(p => {
+                        p.gamesPlayed = (p.gamesPlayed || 0) + 1;
+                    });
+
+                    let originalMatch;
+                    if (matchData.isTournament) {
+                        // This part might need adjustment if tournament match IDs are not unique enough
+                        const tournament = tournaments.find(t => t.name === matchData.tournamentName);
+                        if (tournament) {
+                            originalMatch = tournament.rounds.flat().find(m => `t-${m.id}` === matchData.id);
                         }
-                    } catch (error) {
-                        console.error(`Errore nel ricalcolare l'ELO per la partita:`, matchData, error);
+                    } else {
+                        originalMatch = matches.find(m => m.id === matchData.id);
+                    }
+
+                    if (originalMatch) {
+                        originalMatch.eloChange = eloChange;
+                        originalMatch.teamA_elos = currentTeamAElos;
+                        originalMatch.teamB_elos = currentTeamBElos;
                     }
                 });
             }
@@ -1343,20 +1329,12 @@
                 container.innerHTML = allHistoricalMatches.length ? '' : `<p class="text-gray-500 text-center py-4">Nessuna partita trovata.</p>`;
             
                 allHistoricalMatches.forEach(match => {
-                    const teamAPlayers = { 
-                        attack: getPlayer(match.teamA.attack), 
-                        defense: getPlayer(match.teamA.defense) 
-                    };
-                    const teamBPlayers = { 
-                        attack: getPlayer(match.teamB.attack), 
-                        defense: getPlayer(match.teamB.defense) 
-                    };
-
-                    // Robustezza: se un giocatore non esiste più, mostra un testo alternativo
-                    const pA_att_name = teamAPlayers.attack ? teamAPlayers.attack.name : '(Giocatore Eliminato)';
-                    const pA_def_name = teamAPlayers.defense ? teamAPlayers.defense.name : '(Giocatore Eliminato)';
-                    const pB_att_name = teamBPlayers.attack ? teamBPlayers.attack.name : '(Giocatore Eliminato)';
-                    const pB_def_name = teamBPlayers.defense ? teamBPlayers.defense.name : '(Giocatore Eliminato)';
+                    const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
+                    const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
+                    if (!teamAPlayers.attack || !teamAPlayers.defense || !teamBPlayers.attack || !teamBPlayers.defense) {
+                        console.warn("Skipping match with missing player(s):", match);
+                        return; // Skip rendering this match if any player is missing
+                    }
             
                     const isEloActive = !match.isTournament || (tournaments.find(t => t.name === match.tournamentName)?.affectsElo ?? false);
                     const eloChangeStringA = (isEloActive && match.eloChange != null) ? (match.winner === 'A' ? `+${Math.round(match.eloChange)}` : `${Math.round(match.eloChange)}`) : 'N/A';
@@ -1380,14 +1358,14 @@
                                 </div>
                                 <div class="md:col-span-2 flex flex-col md:flex-row md:items-center justify-center text-center gap-2 md:gap-4 text-sm">
                                     <span class="truncate ${match.winner === 'A' ? 'font-bold team-blue-color' : 'text-gray-500'}">
-                                        ${pA_att_name} & ${pA_def_name} 
-                                        ${hasScore ? `<span class="font-bold text-lg">${match.scoreA}</span>` : ''}
+                                        ${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} 
+                                        ${hasScore ? `<span class="font-bold text-lg ml-1">${match.scoreA}</span>` : '<span class="font-bold text-lg ml-1 text-gray-400">N.D.</span>'}
                                         <span class="text-xs font-normal ${eloChangeClassA}">(${eloChangeStringA})</span>
                                     </span>
                                     <span class="text-gray-400 font-bold text-xs">VS</span>
                                     <span class="truncate ${match.winner === 'B' ? 'font-bold team-red-color' : 'text-gray-500'}">
-                                        ${hasScore ? `<span class="font-bold text-lg">${match.scoreB}</span>` : ''}
-                                        ${pB_att_name} & ${pB_def_name} 
+                                        ${teamBPlayers.attack.name} & ${teamBPlayers.defense.name} 
+                                        ${hasScore ? `<span class="font-bold text-lg ml-1">${match.scoreB}</span>` : '<span class="font-bold text-lg ml-1 text-gray-400">N.D.</span>'}
                                         <span class="text-xs font-normal ${eloChangeClassB}">(${eloChangeStringB})</span>
                                     </span>
                                 </div>
@@ -1406,7 +1384,19 @@
                                 <h4 class="font-semibold text-gray-800 text-sm mb-1">🤖 L'analisi del coach:</h4>
                                 <p class="text-sm italic text-gray-700">${match.commentaries?.coach || "Nessun commento."}</p>
                             </div>
-                            <div class="text-right">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div class="team-blue-color">
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Blu (ELO Medio: ${match.teamA_elos ? Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2) : 'N/A'})</h4>
+                                    <p>⚔️ ${teamAPlayers.attack.name}: <span class="font-semibold">${match.teamA_elos ? match.teamA_elos.attack : 'N/A'}</span></p>
+                                    <p>🛡️ ${teamAPlayers.defense.name}: <span class="font-semibold">${match.teamA_elos ? match.teamA_elos.defense : 'N/A'}</span></p>
+                                </div>
+                                <div class="team-red-color">
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Rossa (ELO Medio: ${match.teamB_elos ? Math.round((match.teamB_elos.attack + match.teamB_elos.defense) / 2) : 'N/A'})</h4>
+                                    <p>⚔️ ${teamBPlayers.attack.name}: <span class="font-semibold">${match.teamB_elos ? match.teamB_elos.attack : 'N/A'}</span></p>
+                                    <p>🛡️ ${teamBPlayers.defense.name}: <span class="font-semibold">${match.teamB_elos ? match.teamB_elos.defense : 'N/A'}</span></p>
+                                </div>
+                            </div>
+                            <div class="text-right mt-2">
                                 <button class="btn btn-secondary text-xs px-2 py-1 rounded generate-commentary-btn" data-match-id="${match.id}" ${match.isTournament ? 'style="display:none;"' : ''}>Genera Commenti AI</button>
                             </div>
                         </div>
@@ -2145,9 +2135,6 @@ Usa un massimo di 3-4 paragrafi.`;
                 playerMatches.forEach(match => {
                     const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
                     const teamBPlayers = { attack: getPlayer(match.teamB.attack), defense: getPlayer(match.teamB.defense) };
-
-                    if (!teamAPlayers.attack || !teamAPlayers.defense || !teamBPlayers.attack || !teamBPlayers.defense) return;
-
                     const isPlayerInTeamA = match.teamA.attack === player.id || match.teamA.defense === player.id;
                     const didPlayerWin = (isPlayerInTeamA && match.winner === 'A') || (!isPlayerInTeamA && match.winner === 'B');
                     const resultClass = didPlayerWin ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
@@ -2175,14 +2162,14 @@ Usa un massimo di 3-4 paragrafi.`;
                         <div class="player-match-accordion-content hidden p-4 border-t border-gray-200 bg-white rounded-b-lg">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="team-blue-color">
-                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Blu (ELO Medio: ${Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2)})</h4>
-                                    <p>⚔️ ${teamAPlayers.attack.name}: <span class="font-semibold">${match.teamA_elos.attack}</span></p>
-                                    <p>🛡️ ${teamAPlayers.defense.name}: <span class="font-semibold">${match.teamA_elos.defense}</span></p>
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Blu (ELO Medio: ${match.teamA_elos ? Math.round((match.teamA_elos.attack + match.teamA_elos.defense) / 2) : 'N/A'})</h4>
+                                    <p>⚔️ ${teamAPlayers.attack.name}: <span class="font-semibold">${match.teamA_elos ? match.teamA_elos.attack : 'N/A'}</span></p>
+                                    <p>🛡️ ${teamAPlayers.defense.name}: <span class="font-semibold">${match.teamA_elos ? match.teamA_elos.defense : 'N/A'}</span></p>
                                 </div>
                                 <div class="team-red-color">
-                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Rossa (ELO Medio: ${Math.round((match.teamB_elos.attack + match.teamB_elos.defense) / 2)})</h4>
-                                    <p>⚔️ ${teamBPlayers.attack.name}: <span class="font-semibold">${match.teamB_elos.attack}</span></p>
-                                    <p>🛡️ ${teamBPlayers.defense.name}: <span class="font-semibold">${match.teamB_elos.defense}</span></p>
+                                    <h4 class="font-bold border-b pb-1 mb-2">Squadra Rossa (ELO Medio: ${match.teamB_elos ? Math.round((match.teamB_elos.attack + match.teamB_elos.defense) / 2) : 'N/A'})</h4>
+                                    <p>⚔️ ${teamBPlayers.attack.name}: <span class="font-semibold">${match.teamB_elos ? match.teamB_elos.attack : 'N/A'}</span></p>
+                                    <p>🛡️ ${teamBPlayers.defense.name}: <span class="font-semibold">${match.teamB_elos ? match.teamB_elos.defense : 'N/A'}</span></p>
                                 </div>
                             </div>
                         </div>`;
@@ -2488,28 +2475,20 @@ Usa un massimo di 3-4 paragrafi.`;
                     fileHandle = null; // Reset handle if permission is lost
                 }
             }
-            
-            /**
-             * Carica i dati da un oggetto JSON.
-             * Esegue la validazione di base e la migrazione dei dati per la retrocompatibilità.
-             * @param {object} data - L'oggetto dati da caricare.
-             */
-            function loadData(data) {
-                // Robustezza: Controlla che il file importato abbia la struttura minima necessaria
-                if (!data || typeof data !== 'object' || !Array.isArray(data.players) || !Array.isArray(data.matches)) {
-                    throw new Error("File di dati non valido o corrotto. Importazione annullata.");
-                }
 
-                // Migrazione dati per vecchie strutture (retrocompatibilità)
+            function loadData(data) {
+                if (!data.players || !data.matches) throw new Error("File non valido.");
+
+                // Data migration for commentaries
                 data.matches.forEach(m => {
-                    if (Array.isArray(m.teamA)) { // Vecchia struttura team
+                    if (Array.isArray(m.teamA)) {
                         m.teamA = { attack: m.teamA[0], defense: m.teamA[1] };
                         m.teamB = { attack: m.teamB[0], defense: m.teamB[1] };
                     }
-                    if (m.commentary && typeof m.commentary === 'string') { // Vecchia struttura commenti
+                    if (m.commentary && typeof m.commentary === 'string') {
                         m.commentaries = { critic: m.commentary, coach: null };
                         delete m.commentary;
-                    } else if (!m.commentaries) { // Aggiunge la struttura commenti se mancante
+                    } else if (!m.commentaries) {
                         m.commentaries = { critic: null, coach: null };
                     }
                 });
@@ -2538,17 +2517,13 @@ Usa un massimo di 3-4 paragrafi.`;
                 const reader = new FileReader();
                 reader.onload = e => {
                     try {
-                        const data = JSON.parse(e.target.result);
-                        loadData(data); // Usa la funzione robusta per caricare
+                        loadData(JSON.parse(e.target.result));
                         showMessage("Backup importato con successo!");
-                    } catch (err) { 
-                        showMessage(`Errore importazione: ${err.message}`, true); 
-                    }
+                    } catch (err) { showMessage(`Errore importazione: ${err.message}`, true); }
                 };
                 reader.readAsText(file);
-                importFileInput.value = ''; // Resetta l'input per permettere di importare lo stesso file di nuovo
+                importFileInput.value = '';
             }
-
 
             async function saveAndRender() {
                 localStorage.setItem('foosballEloTracker', JSON.stringify({ players, matches, tournaments }));
@@ -2559,12 +2534,7 @@ Usa un massimo di 3-4 paragrafi.`;
             function loadFromStorage() {
                 const storedState = localStorage.getItem('foosballEloTracker');
                 if (storedState) {
-                   try {
-                       loadData(JSON.parse(storedState));
-                   } catch (error) {
-                        console.error("Errore nel caricare i dati da localStorage:", error);
-                        localStorage.removeItem('foosballEloTracker'); // Rimuove i dati corrotti
-                   }
+                   loadData(JSON.parse(storedState));
                 }
                  // Gestione API Key
                 const storedApiKey = localStorage.getItem('geminiApiKey');
@@ -2573,6 +2543,13 @@ Usa un massimo di 3-4 paragrafi.`;
                         geminiApiKeyInput.value = decryptKey(storedApiKey);
                     } catch (e) {
                         localStorage.removeItem('geminiApiKey'); // Rimuovi se corrotta
+                    }
+                } else {
+                    // Imposta e salva la chiave di default se non ce n'è una
+                    const defaultKey = "YOUR_DEFAULT_API_KEY"; // Inserisci una chiave predefinita se necessario
+                    if(defaultKey !== "YOUR_DEFAULT_API_KEY"){
+                        geminiApiKeyInput.value = defaultKey;
+                        localStorage.setItem('geminiApiKey', encryptKey(defaultKey));
                     }
                 }
             }
@@ -2901,12 +2878,9 @@ Usa un massimo di 3-4 paragrafi.`;
                 const p1 = getPlayer(team.player1Id);
                 const p2 = getPlayer(team.player2Id);
 
-                const p1Name = p1 ? p1.name : '(Giocatore Eliminato)';
-                const p2Name = p2 ? p2.name : '(Giocatore Eliminato)';
+                if (short && p1 && p2) return `${p1.name.split(' ')[0]} & ${p2.name.split(' ')[0]}`;
 
-                if (short) return `${p1Name.split(' ')[0]} & ${p2Name.split(' ')[0]}`;
-
-                return `${p1Name} & ${p2Name}`;
+                return p1 && p2 ? `${p1.name} & ${p2.name}` : `Squadra ${team.id}`;
             }
 
             function getTeamNameWithRoles(tournament, teamId, match) {
@@ -2919,11 +2893,7 @@ Usa un massimo di 3-4 paragrafi.`;
 
                 const attacker = getPlayer(attackerId);
                 const defender = getPlayer(team.player1Id === attackerId ? team.player2Id : team.player1Id);
-                
-                const attackerName = attacker ? attacker.name : '(Giocatore Eliminato)';
-                const defenderName = defender ? defender.name : '(Giocatore Eliminato)';
-
-                return `⚔️ ${attackerName} & 🛡️ ${defenderName}`;
+                return attacker && defender ? `⚔️ ${attacker.name} & 🛡️ ${defender.name}` : `Squadra ${team.id}`;
             }
 
             function openTournamentViewModal(tournamentId) {
