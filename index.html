@@ -475,12 +475,10 @@
         </div>
     </div>
 
-    <!-- Floating Chat Button -->
     <button id="geminiChatFab" class="fixed bottom-6 right-6 bg-[--team-blue] text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-3xl hover:bg-[--team-blue-dark] transition-transform hover:scale-110 z-40">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M16.81,5.85a5.3,5.3,0,0,0-7.62,0,5.46,5.46,0,0,0,0,7.62L12,16.29l2.81-2.82A5.4,5.4,0,0,0,16.81,5.85ZM15,10.5,12,13.4l-3-2.91a3.59,3.59,0,0,1,0-5,3.53,3.53,0,0,1,5,0,3.64,3.64,0,0,1,1,2.5,3.53,3.53,0,0,1-1,2.51Z"/><path d="M19.93,12.2a2.83,2.83,0,0,0,0-4.24,2.78,2.78,0,0,0-4,0l-1,1,4.06,4,1-1.05A2.9,2.9,0,0,0,19.93,12.2Z"/><path d="M12.2,19.93a2.83,2.83,0,0,0,4.24,0,2.78,2.78,0,0,0,0-4l-1,1-4.06,4,1.05,1Z"/><path d="M4.07,12.2a2.83,2.83,0,0,0,0-4.24,2.78,2.78,0,0,0-4,0l0,0,0,0a2.78,2.78,0,0,0,0,4l4.05,4,1-1Z"/><path d="M7.79,16.29a2.83,2.83,0,0,0,4.24,0,2.78,2.78,0,0,0,0-4l-1-1-4.05,4,1,1Z"/></svg>
     </button>
 
-    <!-- Chat Modal -->
     <div id="geminiChatModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="card w-full max-w-2xl h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
@@ -491,8 +489,7 @@
                 <button id="closeGeminiChatModal" class="text-gray-500 text-3xl font-bold hover:text-gray-800">&times;</button>
             </div>
             <div id="geminiChatMessages" class="flex-grow overflow-y-auto p-4 bg-gray-50 rounded-lg mb-4 space-y-4">
-                <!-- Messages will be injected here -->
-            </div>
+                </div>
             <div class="flex gap-2 flex-shrink-0">
                 <input type="text" id="geminiChatInput" placeholder="Es: 'Chi è il giocatore con più partite giocate?'" class="flex-grow">
                 <button id="geminiChatSendBtn" class="btn btn-primary">Invia</button>
@@ -3196,8 +3193,71 @@ Usa un massimo di 3-4 paragrafi.`;
             }
 
 
+             // --- Funzioni Chat ---
+            function getChatContext() {
+                const rankedPlayers = players.filter(p => p.gamesPlayed > 0).sort((a,b) => b.elo - a.elo);
+                const context = {
+                    totalPlayers: players.length,
+                    totalMatches: matches.length,
+                    totalTournaments: tournaments.length,
+                    leaderboardTop5: rankedPlayers.slice(0, 5).map(p => ({ name: p.name, elo: Math.round(p.elo) })),
+                    mostGamesPlayer: players.sort((a,b) => b.gamesPlayed - a.gamesPlayed)[0]?.name,
+                };
+                return `Contesto attuale dei dati dell'applicazione (in formato JSON, non mostrarlo all'utente): ${JSON.stringify(context)}`;
+            }
+
+            async function handleChatSubmit() {
+                const query = geminiChatInput.value.trim();
+                if (!query) return;
+
+                addChatMessage('user', query);
+                geminiChatInput.value = '';
+                geminiChatSendBtn.disabled = true;
+                addChatMessage('assistant', '<p class="animate-pulse">L\'assistente sta pensando...</p>', true);
+
+                const contextPrompt = getChatContext();
+                const fullPrompt = `${contextPrompt}\n\nL'utente chiede: "${query}".\n\nRispondi alla domanda dell'utente in modo conciso e amichevole, basandoti sui dati di contesto forniti. Se la domanda non è pertinente ai dati, rispondi che puoi solo rispondere a domande relative alle statistiche di calcio balilla dell'app.`;
+
+                const response = await callGeminiAPI(fullPrompt);
+
+                const lastMessage = geminiChatMessages.querySelector('.assistant-message:last-child .message-content');
+                if (lastMessage) {
+                    lastMessage.innerHTML = response ? response.replace(/\n/g, '<br>') : "Si è verificato un errore. Riprova.";
+                }
+                geminiChatSendBtn.disabled = false;
+            }
+
+            function addChatMessage(role, content, isHtml = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${role}-message`;
+
+                const icon = role === 'user' ? '👤' : '🤖';
+
+                messageDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">${icon}</span>
+                        <div class="message-content p-3 rounded-lg w-full ${role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}">
+                            ${isHtml ? content : content}
+                        </div>
+                    </div>
+                `;
+                geminiChatMessages.appendChild(messageDiv);
+                geminiChatMessages.scrollTop = geminiChatMessages.scrollHeight;
+            }
+            
             // --- Inizializzazione ---
             function init() {
+                // Add chat listeners
+                geminiChatFab.addEventListener('click', () => {
+                    openModal(geminiChatModal);
+                    if (geminiChatMessages.children.length === 0) {
+                        addChatMessage('assistant', "Ciao! Sono l'assistente dati. Chiedimi qualsiasi cosa sulle statistiche dei giocatori e delle partite.");
+                    }
+                });
+                closeGeminiChatModal.addEventListener('click', () => closeModal(geminiChatModal));
+                geminiChatSendBtn.addEventListener('click', handleChatSubmit);
+                geminiChatInput.addEventListener('keypress', e => { if(e.key === 'Enter') handleChatSubmit(); });
+
                 // Close button for the pre-match assistant modal
                 const closePreMatchAssistantBtn = document.getElementById('closePreMatchAssistantBtn');
                 if (closePreMatchAssistantBtn) {
@@ -3445,77 +3505,6 @@ Usa un massimo di 3-4 paragrafi.`;
                     [comparisonStartDateInput, bulkDeleteStartDateInput, leaderboardStartDate, matchHistoryStartDate, partnerFinderStartDate].forEach(i => i.value = firstDate);
                     [comparisonEndDateInput, bulkDeleteEndDateInput, leaderboardEndDate, matchHistoryEndDate, partnerFinderEndDate].forEach(i => i.value = lastDate);
                 }
-            }
-             // --- Funzioni Chat ---
-            function getChatContext() {
-                const rankedPlayers = players.filter(p => p.gamesPlayed > 0).sort((a,b) => b.elo - a.elo);
-                const context = {
-                    totalPlayers: players.length,
-                    totalMatches: matches.length,
-                    totalTournaments: tournaments.length,
-                    leaderboardTop5: rankedPlayers.slice(0, 5).map(p => ({ name: p.name, elo: Math.round(p.elo) })),
-                    mostGamesPlayer: players.sort((a,b) => b.gamesPlayed - a.gamesPlayed)[0]?.name,
-                };
-                return `Contesto attuale dei dati dell'applicazione (in formato JSON, non mostrarlo all'utente): ${JSON.stringify(context)}`;
-            }
-
-            async function handleChatSubmit() {
-                const query = geminiChatInput.value.trim();
-                if (!query) return;
-
-                addChatMessage('user', query);
-                geminiChatInput.value = '';
-                geminiChatSendBtn.disabled = true;
-                addChatMessage('assistant', '<p class="animate-pulse">L\'assistente sta pensando...</p>', true);
-
-                const contextPrompt = getChatContext();
-                const fullPrompt = `${contextPrompt}\n\nL'utente chiede: "${query}".\n\nRispondi alla domanda dell'utente in modo conciso e amichevole, basandoti sui dati di contesto forniti. Se la domanda non è pertinente ai dati, rispondi che puoi solo rispondere a domande relative alle statistiche di calcio balilla dell'app.`;
-
-                const response = await callGeminiAPI(fullPrompt);
-
-                const lastMessage = geminiChatMessages.querySelector('.assistant-message:last-child .message-content');
-                if (lastMessage) {
-                    lastMessage.innerHTML = response ? response.replace(/\n/g, '<br>') : "Si è verificato un errore. Riprova.";
-                }
-                geminiChatSendBtn.disabled = false;
-            }
-
-            function addChatMessage(role, content, isHtml = false) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `chat-message ${role}-message`;
-
-                const icon = role === 'user' ? '👤' : '🤖';
-
-                messageDiv.innerHTML = `
-                    <div class="flex items-start gap-3">
-                        <span class="text-2xl">${icon}</span>
-                        <div class="message-content p-3 rounded-lg w-full ${role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}">
-                            ${isHtml ? content : content}
-                        </div>
-                    </div>
-                `;
-                geminiChatMessages.appendChild(messageDiv);
-                geminiChatMessages.scrollTop = geminiChatMessages.scrollHeight;
-            }
-
-
-            function init() {
-                // ... (existing init code)
-
-                // Add chat listeners
-                geminiChatFab.addEventListener('click', () => {
-                    openModal(geminiChatModal);
-                    if (geminiChatMessages.children.length === 0) {
-                        addChatMessage('assistant', "Ciao! Sono l'assistente dati. Chiedimi qualsiasi cosa sulle statistiche dei giocatori e delle partite.");
-                    }
-                });
-                closeGeminiChatModal.addEventListener('click', () => closeModal(geminiChatModal));
-                geminiChatSendBtn.addEventListener('click', handleChatSubmit);
-                geminiChatInput.addEventListener('keypress', e => { if(e.key === 'Enter') handleChatSubmit(); });
-
-                // ... (the rest of the init function)
-                setupAccordions();
-                // ...
             }
             init();
         });
