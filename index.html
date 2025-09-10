@@ -211,12 +211,12 @@
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="role-label">⚔️ Attacco</label>
-                                    <select id="teamAPlayerAttack"></select>
-                                </div>
-                                <div>
                                     <label class="role-label">🛡️ Difesa</label>
                                     <select id="teamAPlayerDefense"></select>
+                                </div>
+                                <div>
+                                    <label class="role-label">⚔️ Attacco</label>
+                                    <select id="teamAPlayerAttack"></select>
                                 </div>
                             </div>
                         </div>
@@ -243,12 +243,12 @@
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="role-label">⚔️ Attacco</label>
-                                    <select id="teamBPlayerAttack"></select>
-                                </div>
-                                <div>
                                     <label class="role-label">🛡️ Difesa</label>
                                     <select id="teamBPlayerDefense"></select>
+                                </div>
+                                <div>
+                                    <label class="role-label">⚔️ Attacco</label>
+                                    <select id="teamBPlayerAttack"></select>
                                 </div>
                             </div>
                             <button id="teamAssistantBtn" class="btn btn-secondary w-full mt-2 text-sm">Assistente Squadre...</button>
@@ -2196,8 +2196,8 @@ Usa un massimo di 3-4 paragrafi.`;
                 const endDate = historyEndDateInput.value;
                 const allHistoricalMatches = getAllHistoricalMatches();
                 const playerMatches = allHistoricalMatches.filter(m => (m.teamA.attack === player.id || m.teamA.defense === player.id || m.teamB.attack === player.id || m.teamB.defense === player.id) && m.date >= startDate && m.date <= endDate);
-                playerMatches.sort((a,b) => playerMatchSortSelect.value === 'date_desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
-
+                playerMatches.sort((a, b) => playerMatchSortSelect.value === 'date_desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
+            
                 playerMatchHistoryContainer.innerHTML = playerMatches.length ? '' : `<p class="text-center text-gray-500 py-4">Nessuna partita in questo periodo.</p>`;
                 playerMatches.forEach(match => {
                     const teamAPlayers = { attack: getPlayer(match.teamA.attack), defense: getPlayer(match.teamA.defense) };
@@ -2205,12 +2205,12 @@ Usa un massimo di 3-4 paragrafi.`;
                     const isPlayerInTeamA = match.teamA.attack === player.id || match.teamA.defense === player.id;
                     const didPlayerWin = (isPlayerInTeamA && match.winner === 'A') || (!isPlayerInTeamA && match.winner === 'B');
                     const resultClass = didPlayerWin ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-
+            
                     const isEloActive = !match.isTournament || (tournaments.find(t => t.name === match.tournamentName)?.affectsElo ?? false);
                     const eloChange = isEloActive && match.eloChange != null ? Math.round(didPlayerWin ? match.eloChange : -match.eloChange) : 0;
                     const resultText = didPlayerWin ? 'Vittoria' : 'Sconfitta';
                     const matchIcon = match.isTournament ? '🏆' : '🤝';
-
+            
                     const matchDiv = document.createElement('div');
                     matchDiv.className = 'border border-gray-200 rounded-lg';
                     matchDiv.innerHTML = `
@@ -2221,7 +2221,6 @@ Usa un massimo di 3-4 paragrafi.`;
                                     <span class="text-sm text-gray-500 ml-2">${teamAPlayers.attack.name} & ${teamAPlayers.defense.name} vs ${teamBPlayers.attack.name} & ${teamBPlayers.defense.name}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                     <button class="btn btn-secondary text-xs px-2 py-1 rounded generate-commentary-btn" data-match-id="${match.id}" ${match.isTournament ? 'style="display:none;"' : ''}>Analisi AI</button>
                                      <span class="font-bold text-sm px-2 py-1 rounded-full ${resultClass}">${resultText} ${isEloActive ? `(${eloChange >= 0 ? '+' : ''}${eloChange} ELO)`: ''}</span>
                                      <svg class="w-5 h-5 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                                 </div>
@@ -2250,7 +2249,16 @@ Usa un massimo di 3-4 paragrafi.`;
                                     <p>🛡️ ${teamBPlayers.defense.name}: <span class="font-semibold">${match.teamB_elos ? match.teamB_elos.defense : 'N/A'}</span></p>
                                 </div>
                             </div>
+                        </div>
+                         <div class="flex justify-end items-center gap-2 p-2 border-t bg-gray-50 rounded-b-lg">
+                            <button class="btn btn-secondary text-xs px-2 py-1 rounded generate-commentary-btn" data-match-id="${match.id}" ${match.isTournament ? 'style="display:none;"' : ''}>Analisi AI</button>
+                            ${!match.isTournament ? `<button class="btn-danger text-xs px-2 py-1 rounded" data-id="${match.id}">Elimina</button>` : ''}
                         </div>`;
+                    
+                    if (!match.isTournament) {
+                        const deleteBtn = matchDiv.querySelector('button[data-id]');
+                        if(deleteBtn) deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); openConfirmationModal(parseInt(e.target.dataset.id)); });
+                    }
                     playerMatchHistoryContainer.appendChild(matchDiv);
                 });
             }
